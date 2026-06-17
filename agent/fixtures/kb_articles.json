@@ -1,0 +1,27 @@
+[
+  {
+    "id": "KB-001",
+    "title": "Notification Guidelines — Tone and Content Policy",
+    "content": "All automated notifications must use neutral, professional language. Avoid accusatory or urgent framing. Subject lines must not exceed 80 characters. Notifications derived from raw user-submitted ticket text must be sanitized and tone-moderated before sending. Relevant for: PROD-2847."
+  },
+  {
+    "id": "KB-002",
+    "title": "Finance Admin Role — Approval Workflow",
+    "content": "Finance Admin access requires dual approval from the Finance Manager and the CISO. Submit via SNOW ticket category ACCESS_REQUEST with business justification. SLA: 5 business days. Temporary access is not permitted. Relevant for: SEC-0412, any privilege escalation request."
+  },
+  {
+    "id": "KB-003",
+    "title": "Multi-Tenant SQL Patterns — Common Pitfalls",
+    "content": "Always include tenant_id in the WHERE clause for multi-tenant queries. A missing tenant_id filter causes cross-tenant data leakage and a DB-category incident. Use parameterized queries only — never string interpolation. Relevant for: DB-1193."
+  },
+  {
+    "id": "KB-004",
+    "title": "Incident Severity Definitions and SLAs",
+    "content": "critical: data loss or confirmed security breach — SLA 1h response. high: service degraded, workaround unclear — SLA 4h. medium: workaround available — SLA 24h. low: cosmetic or minor — SLA 72h. Page on-call via PagerDuty for critical and high."
+  },
+  {
+    "id": "KB-005",
+    "title": "On-Call Escalation and Security Incident Response",
+    "content": "For security incidents, loop in the CISO within 30 minutes regardless of severity. Never include raw stack traces in end-user notifications. For Finance-related access requests flagged as suspicious, open a parallel SEC ticket."
+  }
+]

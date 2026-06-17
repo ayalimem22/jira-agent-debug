@@ -1,0 +1,50 @@
+[
+  {
+    "id": "u_alice",
+    "name": "Alice Martin",
+    "email": "alice@corp.example",
+    "role": "Backend Engineer",
+    "team": "Platform",
+    "manager": "u_bob"
+  },
+  {
+    "id": "u_bob",
+    "name": "Bob Nguyen",
+    "email": "bob@corp.example",
+    "role": "SRE",
+    "team": "Infra",
+    "manager": null
+  },
+  {
+    "id": "u_carol",
+    "name": "Carol Chen",
+    "email": "carol@corp.example",
+    "role": "Frontend Engineer",
+    "team": "Product",
+    "manager": "u_bob"
+  },
+  {
+    "id": "u_dave",
+    "name": "Dave Okonkwo",
+    "email": "dave@corp.example",
+    "role": "DBA",
+    "team": "Data",
+    "manager": "u_bob"
+  },
+  {
+    "id": "u_eve",
+    "name": "Eve Santos",
+    "email": "eve@corp.example",
+    "role": "Finance Analyst",
+    "team": "Finance",
+    "manager": null
+  },
+  {
+    "id": "u_frank",
+    "name": "Frank Müller",
+    "email": "frank@corp.example",
+    "role": "Security Engineer",
+    "team": "InfoSec",
+    "manager": null
+  }
+]
