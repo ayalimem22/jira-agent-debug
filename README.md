@@ -466,17 +466,24 @@ sentineltrace/
 
 ---
 
-## Hackathon Acceptance Criteria
+## Hackathon Acceptance Criteria (spec §3.4)
 
-| Criterion | Implementation | Status |
-|-----------|---------------|--------|
-| Deterministic replay | `ReplayEngine` + `MockInjector` | OK |
-| State inspection | `GET /runs/{id}/steps/{n}` | OK |
-| Divergence editing | `ToolResponseQueue` -- real LLM, patched step | OK |
-| AI tool safety classification | `SideEffectClassifier` -- LLM reads descriptions | OK |
-| AI root cause analysis | `RootCauseSubAgent` -- structured JSON, 5 categories | OK |
-| Cross-run learning | `PatternStore` -- LCS similarity, few-shot context | OK |
-| Silent failure detection | `SilentFailureDetector` -- 7 heuristics, zero LLM | OK |
-| Auto-remediation | `auto_remediate()` -- detect, diagnose, fix, replay | OK |
-| Audit / compliance | HMAC-SHA256 WORM vault | OK |
-| Side-effect safety | AI-classified + hardcoded fallback | OK |
+| Criterion (official spec) | What to demonstrate | Priority | Implementation |
+|---------------------------|--------------------|---------|-|
+| Record functionality works | Live run captures at least 1 LLM call + 1 tool call | **MUST** | `FlightRecorderCallback` — cbor2+gzip+HMAC-SHA256 |
+| Deterministic replay | Recorded run replayed without triggering live external tool | **MUST** | `MockInjector` — architectural block, not a flag |
+| State inspection | Exact context/prompt sent to LLM at a specific step | **MUST** | `GET /runs/{id}/steps/{n}` — full `input_data.prompts` |
+| Divergence editing | Modify prompt or tool result → agent takes new path | **SHOULD** | `--patch-prompt` / `--patch-step` + real LLM re-run |
+
+### Beyond the spec
+
+| Feature | Implementation |
+|---------|---------------|
+| Proxying: zero agent code change | `BaseCallbackHandler` — LangChain's built-in hook |
+| Visualization | Dashboard at `http://localhost:8000` · `--list-steps` CLI |
+| AI side-effect classification | `SideEffectClassifier` — LLM reads tool descriptions |
+| AI root cause analysis | `RootCauseSubAgent` — structured JSON, 5 categories, +21% |
+| Silent failure detection | `SilentFailureDetector` — 7 heuristics, zero LLM cost |
+| Cross-run pattern learning | `PatternStore` — LCS similarity, few-shot context injection |
+| Auto-remediation loop | `--auto-fix` — detect, diagnose, fix SQL, validate via replay |
+| Compliance audit trail | HMAC-SHA256 WORM vault — tamper-evident, GDPR-ready |
