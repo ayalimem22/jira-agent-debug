@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SentinelTrace</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,'Inter',BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--ground);color:var(--text);font-size:13px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+:root{
+  --ground:#F1F5F9;--surface:#FFFFFF;--surface-2:#F8FAFC;
+  --border:#E2E8F0;--border-2:#CBD5E1;
+  --text:#0F172A;--text-2:#64748B;--text-3:#94A3B8;
+  --blue:#1D4ED8;--blue-light:#EFF6FF;--blue-mid:#DBEAFE;
+  --amber:#D97706;--amber-light:#FFFBEB;--amber-mid:#FDE68A;
+  --emerald:#059669;--emerald-light:#ECFDF5;
+  --red:#DC2626;--red-light:#FEF2F2;
+  --indigo:#4F46E5;--indigo-light:#EEF2FF;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.04);
+  --shadow:0 1px 3px rgba(15,23,42,.1),0 4px 6px rgba(15,23,42,.05);
+  --r:8px;--r-sm:5px;
+  --mono:'JetBrains Mono','Fira Code','Consolas','Courier New',monospace;
+}
+
+/* Layout */
+.layout{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* Topbar */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:52px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;z-index:100;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--text);letter-spacing:-.3px}
+.brand-icon{
+  width:30px;height:30px;background:var(--blue);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;color:white;font-size:15px;
+}
+.brand-sub{font-size:11px;font-weight:400;color:var(--text-2);margin-left:2px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.status-pill{
+  display:flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;
+  background:var(--ground);border:1px solid var(--border);
+  font-size:11.5px;color:var(--text-2);font-weight:500;
+}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--emerald)}
+.pulse.active{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+  border-radius:var(--r-sm);font-size:12.5px;font-weight:500;cursor:pointer;
+  border:1px solid transparent;transition:all .12s;white-space:nowrap;
+}
+.btn-primary{background:var(--blue);color:white;border-color:var(--blue)}
+.btn-primary:hover{background:#1E40AF}
+.btn-outline{background:transparent;color:var(--text);border-color:var(--border-2)}
+.btn-outline:hover{background:var(--ground)}
+.btn-ghost{background:transparent;color:var(--text-2);border-color:transparent}
+.btn-ghost:hover{background:var(--ground);color:var(--text)}
+.btn-amber{background:var(--amber);color:white;border-color:var(--amber)}
+.btn-amber:hover{background:#B45309}
+.btn-sm{padding:4px 10px;font-size:11.5px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* App body */
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* Sidebar */
+.sidebar{
+  width:290px;flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;
+}
+.sidebar-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sidebar-title{display:flex;align-items:center;justify-content:space-between}
+.sidebar-title h2{font-size:11px;font-weight:600;color:var(--text-2);letter-spacing:.5px;text-transform:uppercase}
+.run-count{
+  font-size:10.5px;padding:1px 7px;background:var(--ground);border-radius:99px;
+  color:var(--text-2);border:1px solid var(--border);
+}
+.sidebar-search{margin-top:10px;position:relative}
+.sidebar-search input{
+  width:100%;padding:7px 10px 7px 30px;background:var(--ground);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  font-size:12px;color:var(--text);outline:none;
+}
+.sidebar-search input:focus{border-color:var(--blue);background:white}
+.sidebar-search .si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px}
+.runs-list{flex:1;overflow-y:auto;padding:5px 0}
+
+/* Run item */
+.run-item{
+  display:flex;flex-direction:column;gap:5px;padding:10px 16px;cursor:pointer;
+  border-left:3px solid transparent;transition:all .1s;
+}
+.run-item:hover{background:var(--ground)}
+.run-item.active{background:var(--blue-light);border-left-color:var(--blue)}
+.run-item-top{display:flex;align-items:center;justify-content:space-between}
+.run-item-id{font-family:var(--mono);font-size:11px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:155px}
+.run-item-time{font-size:10.5px;color:var(--text-3)}
+.run-item-input{font-size:11.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+.run-item-bottom{display:flex;align-items:center;gap:6px}
+.step-count{font-size:10.5px;color:var(--text-3)}
+
+/* Badges */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;padding:1.5px 7px;
+  border-radius:99px;font-size:10.5px;font-weight:600;white-space:nowrap;
+}
+.badge-completed{background:var(--emerald-light);color:var(--emerald)}
+.badge-failed{background:var(--red-light);color:var(--red)}
+.badge-running{background:var(--blue-light);color:var(--blue)}
+.badge-high{background:var(--red-light);color:var(--red)}
+.badge-medium{background:var(--amber-light);color:var(--amber)}
+.badge-low{background:var(--ground);color:var(--text-2)}
+.anomaly-badge{
+  display:inline-flex;align-items:center;gap:3px;padding:1.5px 7px;border-radius:99px;
+  font-size:10.5px;font-weight:600;background:var(--red-light);color:var(--red);
+}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* Empty state */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;color:var(--text-2);text-align:center;padding:40px;
+}
+.empty-icon{font-size:40px;opacity:.25;margin-bottom:8px}
+.empty-title{font-size:14px;font-weight:600;color:var(--text-2)}
+.empty-desc{font-size:12px;color:var(--text-3);max-width:280px;line-height:1.6}
+
+/* Run detail */
+.run-detail{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* Run header */
+.run-header{
+  padding:16px 24px;flex-shrink:0;background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.run-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.run-id-display{font-family:var(--mono);font-size:13px;color:var(--text);font-weight:600;word-break:break-all}
+.run-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:5px}
+.run-meta-item{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-2)}
+.run-input-text{
+  font-size:12px;color:var(--text-2);padding:7px 12px;background:var(--ground);
+  border-radius:var(--r-sm);border:1px solid var(--border);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* Tabs */
+.tab-bar{
+  display:flex;padding:0 24px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;
+}
+.tab{
+  display:flex;align-items:center;gap:6px;padding:10px 14px;cursor:pointer;
+  font-size:12.5px;font-weight:500;color:var(--text-2);
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s;white-space:nowrap;
+}
+.tab:hover{color:var(--text);background:var(--ground)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-badge{font-size:10px;padding:1px 5px;border-radius:99px;background:var(--red-light);color:var(--red);font-weight:700}
+
+/* Tab panels */
+.tab-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tab-panel{display:none;padding:20px 24px;overflow-y:auto}
+.tab-panel.active{display:block}
+.tab-panel.active.flex-panel{display:flex;flex-direction:column;padding:0;overflow:hidden}
+
+/* Timeline */
+.timeline-wrap{margin-bottom:24px}
+.tl-title{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.timeline{display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:8px}
+.tl-step{display:flex;flex-direction:column;align-items:center;position:relative;flex-shrink:0;cursor:pointer}
+.tl-connector{height:2px;flex:1;min-width:16px;max-width:36px;background:var(--border-2);margin-top:11px;flex-shrink:0}
+.tl-node{
+  width:24px;height:24px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:10px;flex-shrink:0;border:2px solid white;
+  box-shadow:0 0 0 2px var(--border-2);transition:transform .1s;
+}
+.tl-step:hover .tl-node{transform:scale(1.2)}
+.tl-label{font-size:9px;color:var(--text-3);margin-top:5px;text-align:center;white-space:nowrap;max-width:55px;overflow:hidden;text-overflow:ellipsis}
+.tl-node.llm_start{background:#DBEAFE;color:#1D4ED8;box-shadow:0 0 0 2px #BFDBFE}
+.tl-node.llm_result{background:#EEF2FF;color:#4F46E5;box-shadow:0 0 0 2px #C7D2FE}
+.tl-node.tool_call{background:#FEF3C7;color:#D97706;box-shadow:0 0 0 2px #FDE68A}
+.tl-node.tool_ok{background:#D1FAE5;color:#059669;box-shadow:0 0 0 2px #A7F3D0}
+.tl-node.tool_err{background:#FEE2E2;color:#DC2626;box-shadow:0 0 0 2px #FECACA}
+.tl-node.finish{background:#F1F5F9;color:#475569;box-shadow:0 0 0 2px #CBD5E1}
+
+/* Step cards */
+.steps-list{display:flex;flex-direction:column;gap:6px}
+.step-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.step-card-hd{
+  display:flex;align-items:center;gap:10px;padding:9px 14px;
+  cursor:pointer;user-select:none;
+}
+.step-card-hd:hover{background:var(--ground)}
+.step-idx{font-family:var(--mono);font-size:10px;color:var(--text-3);font-weight:600;min-width:22px;text-align:right}
+.step-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.step-type-lbl{font-size:12px;font-weight:600;color:var(--text);min-width:90px}
+.step-name-lbl{font-size:11.5px;color:var(--text-2);font-family:var(--mono)}
+.step-preview{font-size:11px;color:var(--text-3);margin-left:auto;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step-chev{color:var(--text-3);font-size:11px;margin-left:6px;flex-shrink:0;transition:transform .12s}
+.step-card-bd{display:none;padding:0 14px 12px}
+.step-card.open .step-card-bd{display:block}
+.step-card.open .step-chev{transform:rotate(90deg)}
+.json-block{
+  background:#0F172A;color:#E2E8F0;font-family:var(--mono);font-size:11px;
+  line-height:1.65;border-radius:var(--r-sm);padding:12px;overflow-x:auto;
+  white-space:pre;margin-top:8px;max-height:320px;overflow-y:auto;
+}
+.jk{color:#93C5FD}.js{color:#6EE7B7}.jn{color:#FCA5A5}.jb{color:#FDE68A}.jl{color:#94A3B8}
+
+/* Anomalies */
+.anomaly-summary{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.astat{
+  display:flex;flex-direction:column;gap:3px;padding:12px 18px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);min-width:88px;
+}
+.astat-n{font-size:24px;font-weight:700;line-height:1}
+.astat-l{font-size:10.5px;color:var(--text-2);font-weight:500}
+.astat.H .astat-n{color:var(--red)}
+.astat.M .astat-n{color:var(--amber)}
+.astat.ok .astat-n{color:var(--emerald)}
+.anom-list{display:flex;flex-direction:column;gap:8px}
+.anom-card{
+  display:flex;gap:12px;align-items:flex-start;padding:12px 16px;
+  border-radius:var(--r);background:var(--surface);
+  border:1px solid var(--border);border-left:3px solid transparent;box-shadow:var(--shadow-sm);
+}
+.anom-card.high{border-left-color:var(--red)}
+.anom-card.medium{border-left-color:var(--amber)}
+.anom-card.low{border-left-color:var(--text-3)}
+.anom-ico{font-size:18px;flex-shrink:0;margin-top:1px}
+.anom-type{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.anom-step{font-family:var(--mono);font-size:10.5px;color:var(--text-3)}
+.anom-desc{font-size:11.5px;color:var(--text-2);line-height:1.5}
+
+/* Analysis */
+.analysis-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow-sm)}
+.conf-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.conf-lbl{font-size:11px;color:var(--text-2);min-width:68px}
+.conf-bar{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden}
+.conf-fill{height:100%;background:var(--blue);border-radius:99px;transition:width .5s ease}
+.afield{margin-bottom:12px}
+.afield-lbl{font-size:10.5px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.afield-val{font-size:12.5px;color:var(--text);line-height:1.5}
+.a-fix{
+  background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:var(--r-sm);
+  padding:12px 14px;font-size:12px;color:var(--text);line-height:1.6;font-family:var(--mono);
+}
+.a-pattern{
+  display:flex;align-items:flex-start;gap:8px;background:var(--amber-light);
+  border:1px solid var(--amber-mid);border-radius:var(--r-sm);
+  padding:10px 12px;font-size:11.5px;color:var(--text-2);margin-top:12px;
+}
+
+/* Replay */
+.replay-result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-sm);margin-top:16px}
+.rstat-row{display:flex;gap:24px;margin-bottom:14px;flex-wrap:wrap}
+.rstat-lbl{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px}
+.rstat-n{font-size:20px;font-weight:700;color:var(--text)}
+.div-pill{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:600;margin-top:12px}
+.div-pill.clean{background:var(--emerald-light);color:var(--emerald)}
+.div-pill.warn{background:var(--amber-light);color:var(--amber)}
+
+/* Diverge form */
+.form-section-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.form-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--text-3);font-size:11px;font-weight:600;text-transform:uppercase}
+.form-divider::before,.form-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.form-group{margin-bottom:12px}
+.form-lbl{font-size:11.5px;font-weight:500;color:var(--text-2);margin-bottom:5px;display:block}
+.form-inp{
+  width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);
+  font-size:12.5px;color:var(--text);background:var(--surface);outline:none;
+  transition:border-color .12s;font-family:inherit;
+}
+.form-inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
+.form-inp.mono{font-family:var(--mono);font-size:11.5px}
+textarea.form-inp{resize:vertical;min-height:80px}
+.form-hint{font-size:10.5px;color:var(--text-3);margin-top:4px}
+
+/* Trajectory */
+.traj-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.traj-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.traj-col-title{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px}
+.traj-step{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--r-sm);font-size:11.5px;font-family:var(--mono)}
+.traj-step.added{background:var(--emerald-light);color:var(--emerald)}
+.traj-step.removed{background:var(--red-light);color:var(--red);text-decoration:line-through}
+.traj-step.same{color:var(--text-2)}
+
+/* Loading */
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--blue);animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:10px;padding:16px;color:var(--text-2);font-size:12px}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.3);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border-radius:12px;box-shadow:0 20px 60px rgba(15,23,42,.2);padding:24px;width:400px;max-width:calc(100vw - 40px)}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:1000;display:flex;flex-direction:column;gap:8px}
+.toast{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:var(--r);background:var(--text);color:white;font-size:12.5px;box-shadow:var(--shadow);animation:slideIn .2s ease}
+.toast.err{background:var(--red)}.toast.ok{background:var(--emerald)}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
+
+@media(max-width:768px){.sidebar{width:250px}.traj-grid{grid-template-columns:1fr}}
+
+/* ── Replay Player ──────────────────────────────────────────────── */
+.pl-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.pl-start{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;text-align:center;padding:40px}
+.pl-start p{font-size:12.5px;color:var(--text-2);max-width:320px;line-height:1.6;margin-bottom:8px}
+
+.pl-bar{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;background:var(--surface)}
+.pl-ctr{font-family:var(--mono);font-size:11px;color:var(--text-2);min-width:52px;font-weight:600}
+.pl-btns{display:flex;gap:3px}
+.plb{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);width:30px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text-2);transition:all .1s}
+.plb:hover{background:var(--ground);color:var(--text)}
+.plb.play-act{background:var(--blue);color:#fff;border-color:var(--blue)}
+.plb.play-wide{width:72px;font-size:12px;font-weight:600;padding:0 10px}
+.plb:disabled{opacity:.3;cursor:not-allowed}
+.pl-spd{display:flex;align-items:center;gap:6px;margin-left:auto}
+.pl-spd label{font-size:10px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.pl-spd select{font-size:11px;padding:3px 7px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);outline:none}
+.pl-prog{width:100%;height:3px;background:var(--border);flex-shrink:0}
+.pl-prog-fill{height:100%;background:var(--blue);transition:width .3s ease}
+
+.pl-tl-wrap{padding:9px 18px;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;background:var(--surface)}
+.pl-tl{display:flex;align-items:center;min-width:max-content;padding:3px 0}
+.tl-dot{width:18px;height:18px;border-radius:50%;border:2px solid #fff;cursor:pointer;transition:transform .1s;flex-shrink:0}
+.tl-dot:hover{transform:scale(1.3)}
+.tl-dot.curr{box-shadow:0 0 0 2.5px var(--blue);transform:scale(1.15)}
+.tl-dot.future{opacity:.3}
+.tl-dot.anom{outline:2px solid var(--amber);outline-offset:2px}
+.tl-line{height:2px;min-width:8px;max-width:22px;flex:1;background:var(--border);flex-shrink:0;transition:background .25s}
+.tl-line.done{background:var(--blue)}
+
+.viz-area{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.viz-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-sm);animation:vcIn .2s ease}
+@keyframes vcIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.vc-hd{display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.vc-ico{font-size:16px;flex-shrink:0}
+.vc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.vc-sub{font-size:10.5px;color:var(--text-3);margin-left:auto}
+.vc-body{padding:12px 14px}
+.vc-pre{font-family:var(--mono);font-size:11px;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word;max-height:130px;overflow-y:auto}
+.vc-lbl{font-size:9.5px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.vc-thought{font-size:11.5px;color:var(--text-2);font-style:italic;line-height:1.55;margin-bottom:8px}
+.vc-action{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:var(--r-sm)}
+.vc-action-lbl{font-size:9.5px;font-weight:700;color:var(--blue);text-transform:uppercase}
+.vc-action-val{font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:600}
+.vc-ainput{margin-top:8px}
+.vc-ainput-val{font-family:var(--mono);font-size:10.5px;color:var(--text-2);background:var(--ground);padding:5px 8px;border-radius:var(--r-sm);word-break:break-all}
+
+/* Two-column tool call */
+.vc-tool{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:start;padding:12px 14px}
+.vc-agent{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px}
+.vc-agent-lbl{font-size:9.5px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.vc-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding-top:22px}
+.vc-arrow-line{width:2px;height:16px;border-radius:1px}
+.vc-arrow.safe .vc-arrow-line{background:var(--amber)}
+.vc-arrow.blocked .vc-arrow-line{background:var(--red)}
+.vc-arrow-hd{font-size:12px;line-height:1}
+.vc-arrow.safe .vc-arrow-hd{color:var(--amber)}
+.vc-arrow.blocked .vc-arrow-hd{color:var(--red)}
+.vc-arrow-lbl{font-size:8.5px;font-weight:700;text-transform:uppercase;writing-mode:vertical-lr;color:var(--text-3);margin-top:3px;letter-spacing:.3px}
+.vc-mock{border-radius:var(--r-sm);padding:10px 12px;position:relative;overflow:hidden}
+.vc-mock.safe{background:var(--surface);border:1px solid var(--border)}
+.vc-mock.blocked{background:var(--red-light);border:2px solid var(--red)}
+.vc-mock-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.vc-mock-lbl.safe{color:var(--emerald)}
+.vc-mock-lbl.blk{color:var(--red)}
+.m-tag{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700}
+.m-safe{background:var(--emerald-light);color:var(--emerald)}
+.m-blk{background:var(--red-light);color:var(--red)}
+.m-mock{background:var(--blue-light);color:var(--blue)}
+.vc-inp-row{margin-bottom:8px}
+.vc-inp-val{font-family:var(--mono);font-size:10.5px;color:var(--text-2);background:var(--ground);padding:4px 7px;border-radius:3px;word-break:break-all;max-height:55px;overflow:hidden}
+.vc-div{height:1px;background:var(--border);margin:7px 0}
+.vc-resp{font-family:var(--mono);font-size:10.5px;line-height:1.55;word-break:break-all;max-height:60px;overflow:hidden}
+.vc-resp.blk-resp{color:var(--red);font-weight:600}
+.resp-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px}
+.resp-tag.mock{background:var(--blue-light);color:var(--blue)}
+.resp-tag.blk{background:var(--red-light);color:var(--red)}
+.resp-tag.pat{background:#F0FFF4;color:var(--emerald)}
+.interceptor{position:absolute;top:0;right:0;font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:0 var(--r-sm) 0 var(--r-sm);letter-spacing:.2px}
+.interceptor.safe{background:var(--blue);color:#fff}
+.interceptor.blk{background:var(--red);color:#fff}
+.interceptor.pat{background:var(--emerald);color:#fff}
+.vc-fin-ans{background:var(--emerald-light);border:1px solid #86EFAC;border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:#14532D;line-height:1.6;margin-top:8px}
+.anom-bar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--amber-light);border:1px solid var(--amber-mid);border-radius:var(--r-sm);font-size:11px;color:var(--amber);margin-top:8px}
+
+/* Exec log */
+.log-wrap{flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);max-height:170px;display:flex;flex-direction:column}
+.log-hd{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;cursor:pointer;flex-shrink:0}
+.log-hd-lbl{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.6px;text-transform:uppercase}
+.log-hd-chev{font-size:10px;color:var(--text-3);transition:transform .14s}
+.log-hd.open .log-hd-chev{transform:rotate(180deg)}
+.log-rows{overflow-y:auto;flex:1}
+.log-row{display:flex;align-items:center;gap:7px;padding:4px 14px;cursor:pointer;transition:background .1s}
+.log-row:hover{background:var(--ground)}
+.log-row.curr{background:var(--blue-light)}
+.log-row.past{opacity:.65}
+.log-row.future{opacity:.28}
+.log-idx{font-family:var(--mono);font-size:9.5px;color:var(--text-3);min-width:20px;text-align:right}
+.log-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.log-type{font-size:11px;font-weight:600;min-width:80px}
+.log-name{font-family:var(--mono);font-size:10px;color:var(--text-2)}
+.log-snip{font-size:10px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;margin-left:auto}
+.log-tag2{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:3px;flex-shrink:0}
+.log-tag2.mock{background:var(--blue-light);color:var(--blue)}
+.log-tag2.blk{background:var(--red-light);color:var(--red)}
+.log-tag2.pat{background:var(--emerald-light);color:var(--emerald)}
+.log-tag2.anom{background:var(--amber-light);color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Topbar -->
+  <nav class="topbar">
+    <div class="brand">
+      <div class="brand-icon">✦</div>
+      SentinelTrace
+      <span class="brand-sub">v0.1</span>
+    </div>
+    <div class="topbar-right">
+      <div class="status-pill">
+        <div class="pulse" id="statusDot"></div>
+        <span id="statusText">Ready</span>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">▶ New Run</button>
+    </div>
+  </nav>
+
+  <div class="app-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <h2>Agent Runs</h2>
+          <span class="run-count" id="runsCount">0</span>
+        </div>
+        <div class="sidebar-search">
+          <span class="si">⌕</span>
+          <input type="text" placeholder="Filter runs…" id="searchInput" oninput="filterRuns(this.value)">
+        </div>
+      </div>
+      <div class="runs-list" id="runsList">
+        <div class="loading-row"><div class="spinner"></div> Loading…</div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">✦</div>
+        <div class="empty-title">No run selected</div>
+        <div class="empty-desc">Choose a run from the sidebar to inspect its trace, replay it, or run AI root cause analysis.</div>
+      </div>
+
+      <div class="run-detail" id="runDetail" style="display:none">
+
+        <!-- Run header -->
+        <div class="run-header">
+          <div class="run-header-top">
+            <div>
+              <div class="run-id-display" id="hRunId"></div>
+              <div class="run-meta">
+                <span class="run-meta-item" id="hStatus"></span>
+                <span class="run-meta-item" id="hTime"></span>
+                <span class="run-meta-item" id="hSteps"></span>
+                <button class="btn btn-ghost btn-sm" onclick="checkIntegrity()">🔒 Integrity</button>
+              </div>
+            </div>
+          </div>
+          <div class="run-input-text" id="hInput"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-bar">
+          <div class="tab active" data-tab="steps"     onclick="switchTab('steps')">▤ Steps</div>
+          <div class="tab"        data-tab="anomalies" onclick="switchTab('anomalies')">⚠ Anomalies <span class="tab-badge" id="aBadge" style="display:none"></span></div>
+          <div class="tab"        data-tab="analysis"  onclick="switchTab('analysis')">✦ Analysis</div>
+          <div class="tab"        data-tab="replay"    onclick="switchTab('replay')">↺ Replay</div>
+          <div class="tab"        data-tab="diverge"   onclick="switchTab('diverge')">⤢ Diverge</div>
+        </div>
+
+        <div class="tab-content">
+
+          <!-- STEPS -->
+          <div class="tab-panel active" id="panel-steps">
+            <div id="tlWrap"></div>
+            <div class="steps-list" id="stepsList"></div>
+          </div>
+
+          <!-- ANOMALIES -->
+          <div class="tab-panel" id="panel-anomalies">
+            <div id="anomContent">
+              <div class="loading-row"><div class="spinner"></div> Running heuristic checks…</div>
+            </div>
+          </div>
+
+          <!-- ANALYSIS -->
+          <div class="tab-panel" id="panel-analysis">
+            <div id="analysisContent">
+              <div class="empty-state" style="flex:unset;padding:40px 0">
+                <div class="empty-icon">✦</div>
+                <div class="empty-title">AI Root Cause Analysis</div>
+                <div class="empty-desc" style="margin-bottom:16px">A dedicated AI subagent diagnoses failures without rerunning the live agent. Returns category, confidence, failed step, and a concrete fix.</div>
+                <button class="btn btn-primary" onclick="runAnalysis()">✦ Run AI Analysis</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- REPLAY PLAYER -->
+          <div class="tab-panel flex-panel" id="panel-replay">
+            <div class="pl-wrap" id="plWrap">
+              <!-- Start screen -->
+              <div class="pl-start" id="plStart">
+                <div style="font-size:36px;opacity:.18">▶</div>
+                <strong style="font-size:13.5px;color:var(--text)">Step-by-step replay</strong>
+                <p>Watch each LLM call and tool invocation play out — with mock responses, side-effect blocks, and timing. No live endpoints reached.</p>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button class="btn btn-primary" onclick="runReplay()">▶ Run Replay</button>
+                  <div id="replaySpinner" style="display:none" class="loading-row" style="padding:0"><div class="spinner"></div><span style="font-size:12px;color:var(--text-2)">Replaying…</span></div>
+                </div>
+                <div id="replayError" style="color:var(--red);font-size:12px;margin-top:6px"></div>
+              </div>
+              <!-- Player UI (shown after API returns) -->
+              <div id="plUI" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+                <!-- Controls bar -->
+                <div class="pl-bar">
+                  <span class="pl-ctr" id="plCtr">0 / 0</span>
+                  <div class="pl-btns">
+                    <button class="plb" id="plFirst" onclick="plGo(0)" title="First">⏮</button>
+                    <button class="plb" id="plPrev"  onclick="plStep(-1)" title="Prev">◀</button>
+                    <button class="plb play-wide" id="plPlay" onclick="plToggle()">▶ Play</button>
+                    <button class="plb" id="plNext"  onclick="plStep(1)"  title="Next">▶</button>
+                    <button class="plb" id="plLast"  onclick="plGo(9999)" title="Last">⏭</button>
+                  </div>
+                  <div class="pl-spd">
+                    <label>Speed</label>
+                    <select id="plSpeedSel" onchange="plSpeed=+this.value">
+                      <option value="2500">0.5×</option>
+                      <option value="1200" selected>1×</option>
+                      <option value="550">2×</option>
+                      <option value="200">5×</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" onclick="resetPlayer()" style="margin-left:4px">↺ Reset</button>
+                </div>
+                <div class="pl-prog"><div class="pl-prog-fill" id="plProg"></div></div>
+                <!-- Mini timeline -->
+                <div class="pl-tl-wrap"><div class="pl-tl" id="plTl"></div></div>
+                <!-- Visualization area -->
+                <div class="viz-area" id="vizArea"></div>
+                <!-- Execution log -->
+                <div class="log-wrap" id="logWrap">
+                  <div class="log-hd open" id="logHd" onclick="togglePLog()">
+                    <span class="log-hd-lbl">Execution Log</span>
+                    <span class="log-hd-chev">▼</span>
+                  </div>
+                  <div class="log-rows" id="logRows"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DIVERGE -->
+          <div class="tab-panel" id="panel-diverge">
+            <div style="max-width:600px">
+              <p style="font-size:12.5px;color:var(--text-2);margin-bottom:20px;line-height:1.6">
+                Inject a change and observe how the agent re-reasons — real LLM, mock tools, zero side effects.
+                Patch the prompt, a tool result, or both.
+              </p>
+
+              <div>
+                <div class="form-section-title">① Prompt patch <span style="font-size:10.5px;font-weight:400;color:var(--text-3)">(optional)</span></div>
+                <div class="form-group">
+                  <label class="form-lbl">Replacement instruction</label>
+                  <textarea class="form-inp" id="patchPrompt" rows="3"
+                    placeholder="e.g. Triage PROD-2847, investigate only — do NOT send any notification"></textarea>
+                  <div class="form-hint">Replaces the initial prompt. Leave empty to keep the original.</div>
+                </div>
+              </div>
+
+              <div class="form-divider">or</div>
+
+              <div>
+                <div class="form-section-title">② Tool result patch <span style="font-size:10.5px;font-weight:400;color:var(--text-3)">(optional)</span></div>
+                <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px">
+                  <div class="form-group">
+                    <label class="form-lbl">Step index</label>
+                    <input type="number" class="form-inp mono" id="patchStep" placeholder="e.g. 3">
+                    <div class="form-hint">See Steps tab to find the index.</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-lbl">Injected value</label>
+                    <input type="text" class="form-inp mono" id="patchValue" placeholder='[{"id":"PROD-2847",...}]'>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+                <button class="btn btn-amber" onclick="runDivergence()">⤢ Run Divergence Replay</button>
+                <div id="divSpinner" style="display:none" class="loading-row" style="padding:0"><div class="spinner"></div></div>
+              </div>
+              <div id="divResult"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- New Run Modal -->
+<div class="modal-bg" id="newRunModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">▶ Trigger New Agent Run</div>
+    <div class="form-group">
+      <label class="form-lbl">Ticket ID</label>
+      <input type="text" class="form-inp mono" id="ticketInput" placeholder="PROD-2847" value="PROD-2847">
+      <div class="form-hint">Available: PROD-2847 · PROD-2001 · DB-1193 · SEC-0412 · OPS-0321</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="triggerRun()">▶ Run</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+const API = '';
+let S = { runs:[], selectedId:null, steps:[], anomalies:null, analysis:null };
+
+/* ── Init ─────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => { loadRuns(); setInterval(loadRuns, 15000); });
+
+/* ── API ──────────────────────────────────────────────────────── */
+async function api(path, opts={}) {
+  const r = await fetch(API + path, { headers:{'Content-Type':'application/json'}, ...opts });
+  if (!r.ok) { const e = await r.json().catch(()=>({detail:r.statusText})); throw new Error(e.detail||r.statusText); }
+  return r.json();
+}
+
+/* ── Runs list ────────────────────────────────────────────────── */
+async function loadRuns() {
+  try {
+    S.runs = await api('/runs');
+    document.getElementById('runsCount').textContent = S.runs.length;
+    filterRuns(document.getElementById('searchInput').value);
+  } catch { renderNoServer(); }
+}
+function filterRuns(q) {
+  const ql = (q||'').toLowerCase();
+  const list = S.runs.filter(r =>
+    r.run_id.toLowerCase().includes(ql) ||
+    (r.input_text||'').toLowerCase().includes(ql)
+  );
+  const el = document.getElementById('runsList');
+  if (!list.length) { el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-3);font-size:12px">No runs found</div>`; return; }
+  el.innerHTML = list.map(r => {
+    const active = r.run_id === S.selectedId ? 'active' : '';
+    const ts = r.started_at ? new Date(r.started_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—';
+    const ab = (r.anomaly_count > 0) ? `<span class="anomaly-badge">⚠ ${r.anomaly_count}</span>` : '';
+    return `<div class="run-item ${active}" onclick="selectRun('${r.run_id}')">
+      <div class="run-item-top">
+        <span class="run-item-id" title="${r.run_id}">${r.run_id.slice(0,22)}…</span>
+        <span class="run-item-time">${ts}</span>
+      </div>
+      <div><span class="run-item-input">${(r.input_text||'—').slice(0,55)}</span></div>
+      <div class="run-item-bottom">${statusBadge(r.status)}<span class="step-count">${r.step_count||0} steps</span>${ab}</div>
+    </div>`;
+  }).join('');
+}
+function renderNoServer() {
+  document.getElementById('runsList').innerHTML = `
+    <div style="padding:20px;text-align:center;color:var(--text-3);font-size:12px;line-height:1.7">
+      API server not running.<br>
+      <code style="font-size:10.5px;font-family:var(--mono);color:var(--text-2)">uvicorn api.server:app --reload</code>
+    </div>`;
+}
+
+/* ── Select run ───────────────────────────────────────────────── */
+async function selectRun(id) {
+  S.selectedId = id; S.steps=[]; S.anomalies=null; S.analysis=null;
+  filterRuns(document.getElementById('searchInput').value);
+  document.getElementById('emptyState').style.display = 'none';
+  const rd = document.getElementById('runDetail');
+  rd.style.display = 'flex'; rd.style.flexDirection = 'column';
+  try {
+    const run = await api(`/runs/${id}`);
+    document.getElementById('hRunId').textContent = run.run_id;
+    document.getElementById('hStatus').innerHTML  = statusBadge(run.status);
+    document.getElementById('hTime').textContent  = run.started_at ? '🕐 ' + new Date(run.started_at).toLocaleString() : '—';
+    document.getElementById('hInput').textContent = run.input_text || '—';
+  } catch {}
+  switchTab('steps');
+  await loadSteps(id);
+  loadAnomalies(id);
+}
+
+/* ── Steps ────────────────────────────────────────────────────── */
+async function loadSteps(id) {
+  document.getElementById('tlWrap').innerHTML  = '<div class="loading-row"><div class="spinner"></div> Loading steps…</div>';
+  document.getElementById('stepsList').innerHTML = '';
+  document.getElementById('hSteps').textContent = '';
+  try {
+    S.steps = await api(`/runs/${id}/steps`);
+    document.getElementById('hSteps').textContent = S.steps.length + ' steps';
+    renderTimeline(); renderStepsList();
+  } catch(e) {
+    document.getElementById('tlWrap').innerHTML = `<div style="padding:16px;color:var(--red);font-size:12px">Error: ${e.message}</div>`;
+  }
+}
+function stepMeta(s) {
+  const out = JSON.stringify(s.output_data||s.input_data||'');
+  const err = out.toLowerCase().includes('error');
+  switch(s.step_type) {
+    case 'llm_start':   return {cls:'llm_start', icon:'⊞', label:'LLM', dot:'#3B82F6'};
+    case 'llm_result':  return {cls:'llm_result',icon:'⊟', label:'reply',dot:'#6366F1'};
+    case 'tool_call':   return {cls:'tool_call', icon:'⚙', label:s.name||'call',dot:'#D97706'};
+    case 'tool_result': return err
+      ? {cls:'tool_err', icon:'✕', label:s.name||'result',dot:'#DC2626'}
+      : {cls:'tool_ok',  icon:'✓', label:s.name||'result',dot:'#059669'};
+    case 'agent_finish':return {cls:'finish',    icon:'◉', label:'done', dot:'#94A3B8'};
+    default:            return {cls:'finish',    icon:'·', label:s.step_type,dot:'#94A3B8'};
+  }
+}
+function renderTimeline() {
+  let h = '<div class="tl-title">Execution Timeline</div><div class="timeline">';
+  S.steps.forEach((s,i) => {
+    const m = stepMeta(s);
+    if (i>0) h += '<div class="tl-connector"></div>';
+    h += `<div class="tl-step" onclick="scrollToStep(${s.step_index})" title="${s.step_type}${s.name?' · '+s.name:''}">
+      <div class="tl-node ${m.cls}">${m.icon}</div>
+      <div class="tl-label">${m.label}</div>
+    </div>`;
+  });
+  h += '</div>';
+  document.getElementById('tlWrap').innerHTML = h;
+}
+function renderStepsList() {
+  document.getElementById('stepsList').innerHTML = S.steps.map(s => {
+    const m = stepMeta(s);
+    const obj = {step_type:s.step_type,name:s.name,input_data:s.input_data,output_data:s.output_data,model_name:s.model_name,tokens_in:s.tokens_in,tokens_out:s.tokens_out};
+    const preview = JSON.stringify(s.output_data||s.input_data||{}).slice(0,80);
+    return `<div class="step-card" id="step-${s.step_index}">
+      <div class="step-card-hd" onclick="this.closest('.step-card').classList.toggle('open')">
+        <span class="step-idx">${s.step_index}</span>
+        <span class="step-dot" style="background:${m.dot}"></span>
+        <span class="step-type-lbl">${s.step_type}</span>
+        <span class="step-name-lbl">${s.name||''}</span>
+        <span class="step-preview">${preview}…</span>
+        <span class="step-chev">›</span>
+      </div>
+      <div class="step-card-bd"><div class="json-block">${hlJson(JSON.stringify(obj,null,2))}</div></div>
+    </div>`;
+  }).join('');
+}
+function scrollToStep(i) {
+  const el = document.getElementById(`step-${i}`);
+  if (el) { el.scrollIntoView({behavior:'smooth',block:'start'}); el.classList.add('open'); }
+}
+
+/* ── Anomalies ────────────────────────────────────────────────── */
+async function loadAnomalies(id) {
+  if (S.anomalies) return;
+  try {
+    S.anomalies = await api(`/runs/${id}/anomalies`);
+    const n = S.anomalies.anomaly_count||0;
+    const b = document.getElementById('aBadge');
+    b.textContent = n; b.style.display = n>0 ? 'inline-flex' : 'none';
+    if (document.getElementById('panel-anomalies').classList.contains('active')) renderAnomalies();
+  } catch {}
+}
+function renderAnomalies() {
+  const el = document.getElementById('anomContent');
+  const d  = S.anomalies;
+  if (!d) { loadAnomalies(S.selectedId); return; }
+  const H = d.anomalies.filter(a=>a.severity==='high').length;
+  const M = d.anomalies.filter(a=>a.severity==='medium').length;
+  let h = `<div class="anomaly-summary">
+    <div class="astat ${H>0?'H':'ok'}"><span class="astat-n">${H}</span><span class="astat-l">High</span></div>
+    <div class="astat ${M>0?'M':'ok'}"><span class="astat-n">${M}</span><span class="astat-l">Medium</span></div>
+    <div class="astat ok"><span class="astat-n" style="color:var(--${d.is_silent_failure?'red':'emerald'})">${d.is_silent_failure?'YES':'NO'}</span><span class="astat-l">Silent failure</span></div>
+    <div class="astat ok"><span class="astat-n" style="font-size:16px">${Math.round((d.confidence||0)*100)}%</span><span class="astat-l">Confidence</span></div>
+  </div>`;
+  if (!d.anomalies.length) {
+    h += `<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px;text-align:center">
+      <div style="font-size:36px;opacity:.3">✓</div>
+      <div style="font-size:13px;font-weight:600;color:var(--emerald)">No anomalies detected</div>
+      <div style="font-size:11.5px;color:var(--text-3)">${d.summary||''}</div></div>`;
+  } else {
+    const icons = {high:'⚠',medium:'⚡',low:'·'};
+    h += '<div class="anom-list">' + d.anomalies.map(a =>
+      `<div class="anom-card ${a.severity}">
+        <span class="anom-ico">${icons[a.severity]||'·'}</span>
+        <div>
+          <div class="anom-type">${a.type}${a.step_index!==null?`<span class="anom-step">step ${a.step_index}</span>`:''}<span class="badge badge-${a.severity}">${a.severity}</span></div>
+          <div class="anom-desc">${a.description}</div>
+        </div>
+      </div>`
+    ).join('') + '</div>';
+  }
+  el.innerHTML = h;
+}
+
+/* ── Analysis ─────────────────────────────────────────────────── */
+async function runAnalysis() {
+  const el = document.getElementById('analysisContent');
+  el.innerHTML = '<div class="loading-row"><div class="spinner"></div> AI subagent analyzing… (10–30s)</div>';
+  try {
+    S.analysis = await api(`/runs/${S.selectedId}/analyze`, {method:'POST',body:JSON.stringify({hint:''})});
+    renderAnalysis();
+  } catch(e) { el.innerHTML = `<div style="padding:16px;color:var(--red);font-size:12px">Failed: ${e.message}</div>`; }
+}
+function renderAnalysis() {
+  const el = document.getElementById('analysisContent');
+  const d  = S.analysis; if (!d) return;
+  const pct = Math.round((d.confidence||0)*100);
+  const similar = d.similar_runs_found > 0
+    ? `<div style="font-size:11px;color:var(--text-3);margin-top:8px">Similar past runs: ${d.similar_run_ids.join(' · ')}</div>` : '';
+  const pattern = d.is_known_pattern
+    ? `<div class="a-pattern">🔁 <div><strong>Known pattern:</strong> ${d.pattern_note||''}</div></div>` : '';
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px">Root Cause Report</div>
+      <div style="display:flex;gap:8px">
+        <span class="badge" style="background:var(--blue-light);color:var(--blue)">${d.category||'—'}</span>
+        <button class="btn btn-ghost btn-sm" onclick="runAnalysis()">↺ Re-run</button>
+      </div>
+    </div>
+    <div class="analysis-card">
+      <div class="conf-bar-row">
+        <span class="conf-lbl">Confidence</span>
+        <div class="conf-bar"><div class="conf-fill" style="width:${pct}%"></div></div>
+        <span style="font-size:11.5px;font-weight:700;color:var(--text-2);min-width:34px">${pct}%</span>
+      </div>
+      <div class="afield"><div class="afield-lbl">Root Cause</div><div class="afield-val">${d.root_cause||'—'}</div></div>
+      ${d.failed_step!==null?`<div class="afield"><div class="afield-lbl">Failed Step</div><div class="afield-val">Step <strong>${d.failed_step}</strong>${d.failed_variable?` · <code style="font-family:var(--mono);font-size:11px">${d.failed_variable}</code>`:''}</div></div>`:''}
+      <div class="afield"><div class="afield-lbl">Suggested Fix</div><div class="a-fix">${d.suggested_fix||'—'}</div></div>
+      ${pattern}${similar}
+    </div>`;
+}
+
+/* ── Replay Player ────────────────────────────────────────────── */
+let PL = { steps:[], idx:0, playing:false, timer:null };
+let plSpeed = 1200;
+let pLogOpen = true;
+
+async function runReplay() {
+  document.getElementById('replaySpinner').style.display='flex';
+  document.getElementById('replayError').textContent='';
+  try {
+    const r = await api(`/runs/${S.selectedId}/replay`,{method:'POST',body:JSON.stringify({})});
+    PL.steps = (r.outputs||[]).filter(s=>s.step_type!==undefined);
+    if(!PL.steps.length){ document.getElementById('replayError').textContent='No steps returned.'; return; }
+    document.getElementById('plStart').style.display='none';
+    const ui=document.getElementById('plUI');
+    ui.style.cssText='display:flex;flex-direction:column;flex:1;overflow:hidden';
+    PL.idx=0; PL.playing=false;
+    buildPTimeline(); buildPLog(); plRenderAt(0);
+  } catch(e) { document.getElementById('replayError').textContent='Error: '+e.message; }
+  finally { document.getElementById('replaySpinner').style.display='none'; }
+}
+
+function resetPlayer(){
+  plStop();
+  document.getElementById('plUI').style.display='none';
+  document.getElementById('plStart').style.display='flex';
+  document.getElementById('replayError').textContent='';
+}
+
+function buildPTimeline(){
+  let h='';
+  PL.steps.forEach((s,i)=>{
+    if(i>0) h+=`<div class="tl-line" id="tll${i}"></div>`;
+    const col=plStepCol(s);
+    const aoc=plIsAnom(s)?' anom':'';
+    h+=`<div class="tl-dot future${aoc}" id="tld${i}" style="background:${col};border-color:#fff" onclick="plStop();plRenderAt(${i})" title="${s.step_type}${s.name?(' · '+s.name):''}"></div>`;
+  });
+  document.getElementById('plTl').innerHTML=h;
+}
+
+function buildPLog(){
+  const el=document.getElementById('logRows');
+  el.innerHTML=PL.steps.map((s,i)=>{
+    const col=plStepCol(s);
+    const tags=plTags(s);
+    const snip=plSnip(s);
+    return`<div class="log-row future" id="plr${i}" onclick="plStop();plRenderAt(${i})">
+      <span class="log-idx">${i}</span>
+      <span class="log-dot" style="background:${col}"></span>
+      <span class="log-type">${s.step_type}</span>
+      <span class="log-name">${s.name||''}</span>
+      ${tags}
+      <span class="log-snip">${plEsc(snip)}</span>
+    </div>`;
+  }).join('');
+}
+
+function plRenderAt(idx){
+  PL.idx=Math.max(0,Math.min(idx,PL.steps.length-1));
+  const s=PL.steps[PL.idx];
+  document.getElementById('plProg').style.width=((PL.idx/(PL.steps.length-1))*100)+'%';
+  document.getElementById('plCtr').textContent=`${PL.idx+1} / ${PL.steps.length}`;
+  PL.steps.forEach((_,i)=>{
+    const d=document.getElementById(`tld${i}`);
+    const l=document.getElementById(`tll${i}`);
+    if(d){ d.classList.remove('curr','past','future'); d.classList.add(i===PL.idx?'curr':i<PL.idx?'past':'future'); }
+    if(l){ l.classList.toggle('done',i<=PL.idx); }
+  });
+  PL.steps.forEach((_,i)=>{
+    const r=document.getElementById(`plr${i}`);
+    if(!r)return;
+    r.classList.remove('curr','past','future'); r.classList.add(i===PL.idx?'curr':i<PL.idx?'past':'future');
+    if(i===PL.idx) r.scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
+  document.getElementById('vizArea').innerHTML=plBuildViz(s);
+  plUpdateCtrl();
+}
+
+function plBuildViz(s){
+  if(s.step_type==='llm_start'){
+    const prompts=((s.input_data||{}).prompts||[]);
+    const txt=(prompts[0]||'').slice(0,500);
+    return`<div class="viz-card">
+      <div class="vc-hd" style="background:#EFF6FF;border-color:#BFDBFE">
+        <span class="vc-ico">📤</span>
+        <span class="vc-title" style="color:#1D4ED8">LLM Start</span>
+        <span class="vc-sub">Prompt sent to ${plEsc(s.name||'model')}</span>
+      </div>
+      <div class="vc-body">
+        <div class="vc-lbl">Prompt</div>
+        <div class="vc-pre" style="color:var(--text-2)">${plEsc(txt)}${txt.length>=500?'\n…':''}</div>
+      </div></div>`;
+  }
+  if(s.step_type==='llm_result'){
+    const gens=((s.input_data||{}).generations||[]);
+    const raw=(gens[0]&&gens[0][0])||'';
+    const thought=(raw.match(/Thought:\s*([^\n]+)/i)||[])[1];
+    const action=(raw.match(/Action:\s*([^\n]+)/i)||[])[1];
+    const ainput=(raw.match(/Action Input:\s*([^\n]+)/i)||[])[1];
+    return`<div class="viz-card">
+      <div class="vc-hd" style="background:#EEF2FF;border-color:#C7D2FE">
+        <span class="vc-ico">🧠</span>
+        <span class="vc-title" style="color:#4F46E5">LLM Result</span>
+        <span class="vc-sub">Agent reasoning</span>
+        ${s.tokens_out?`<span style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:6px">${s.tokens_out} tok</span>`:''}
+      </div>
+      <div class="vc-body">
+        ${thought?`<div class="vc-lbl">Thought</div><div class="vc-thought">"${plEsc(thought.trim())}"</div>`:''}
+        ${action?`<div class="vc-action"><span class="vc-action-lbl">Action</span><span class="vc-action-val">${plEsc(action.trim())}</span></div>`:''}
+        ${ainput?`<div class="vc-ainput"><div class="vc-lbl" style="margin-top:8px">Action Input</div><div class="vc-ainput-val">${plEsc(ainput.trim().slice(0,200))}</div></div>`:''}
+        ${!thought&&!action?`<div class="vc-pre">${plEsc(raw.slice(0,300))}</div>`:''}
+      </div></div>`;
+  }
+  if(s.step_type==='tool_call'){
+    const inp=((s.input_data||{}).input||'');
+    const resp=((s.output_data||{}).output||'');
+    const isBlocked=resp.startsWith('[MOCK-BLOCKED]')||s._blocked;
+    const isPatched=s._patched||resp.startsWith('[PATCHED]');
+    const anom=plIsAnom(s);
+    const prevLlm=PL.steps.slice(0,PL.idx).reverse().find(x=>x.step_type==='llm_result');
+    const gens=prevLlm?((prevLlm.input_data||{}).generations||[]):[];
+    const thought=((gens[0]&&gens[0][0])||'').match(/Thought:\s*([^\n]+)/i);
+    return`<div class="viz-card"${anom?' style="border-left:3px solid var(--amber)"':''}>
+      <div class="vc-hd" style="background:#FFFBEB;border-color:#FDE68A">
+        <span class="vc-ico">⚙</span>
+        <span class="vc-title" style="color:#B45309">Tool Call</span>
+        <span class="vc-sub">${plEsc(s.name||'tool')} · step ${s.step_index}</span>
+        ${anom?`<span style="font-size:9.5px;font-weight:700;color:var(--amber);background:var(--amber-light);padding:2px 7px;border-radius:99px;margin-left:auto">⚠ ANOMALY</span>`:''}
+      </div>
+      <div class="vc-tool">
+        <div class="vc-agent">
+          <div class="vc-agent-lbl">Agent</div>
+          ${thought?`<div class="vc-thought" style="font-size:11px;margin-bottom:6px">"${plEsc(thought[1].trim().slice(0,90))}"</div>`:''}
+          <div class="vc-action"><span class="vc-action-lbl">Action</span><span class="vc-action-val">${plEsc(s.name||'?')}</span></div>
+          ${inp?`<div class="vc-ainput"><div class="vc-lbl" style="margin-top:7px">Input</div><div class="vc-ainput-val">${plEsc(inp.slice(0,100))}${inp.length>100?'…':''}</div></div>`:''}
+        </div>
+        <div class="vc-arrow ${isBlocked?'blocked':'safe'}">
+          <div class="vc-arrow-line"></div>
+          <div class="vc-arrow-hd">${isBlocked?'⛔':'→'}</div>
+          <div class="vc-arrow-lbl">${isBlocked?'BLOCK':isPatched?'PATCH':'MOCK'}</div>
+        </div>
+        <div class="vc-mock ${isBlocked?'blocked':'safe'}" style="position:relative">
+          <span class="interceptor ${isBlocked?'blk':isPatched?'pat':'safe'}">MockInjector</span>
+          <div class="vc-mock-lbl ${isBlocked?'blk':'safe'}">
+            ${isBlocked?'⚠ BLOCKED':'⚙ MOCK'}: ${plEsc(s.name||'?')}
+            <span class="m-tag ${isBlocked?'m-blk':'m-safe'}">${isBlocked?'side-effect':'safe · read-only'}</span>
+          </div>
+          ${isBlocked?`<div style="font-size:11px;color:var(--red);line-height:1.5;margin-bottom:7px">AI classifier: side-effect tool — real execution blocked.<br>No live endpoint reached during replay.</div>
+          <div style="font-size:10.5px;color:var(--text-2);font-style:italic;background:var(--ground);padding:5px 8px;border-radius:var(--r-sm)">"Sends real notifications — irreversible side effect"<br>— SideEffectClassifier</div>`
+          :`<div class="vc-inp-row"><div class="vc-lbl">Input received</div><div class="vc-inp-val">${plEsc((inp||'—').slice(0,120))}</div></div>`}
+          <div class="vc-div"></div>
+          <div class="vc-lbl">Response</div>
+          ${isBlocked?`<div class="vc-resp blk-resp"><span class="resp-tag blk">[MOCK-BLOCKED]</span>Not executed — intercepted.</div>`
+          :resp?`<div class="vc-resp"><span class="resp-tag ${isPatched?'pat':'mock'}">${isPatched?'[PATCHED]':'[MOCK]'}</span>${plEsc(resp.replace(/^\[MOCK\]\s*/,'').slice(0,150))}${resp.length>150?'…':''}</div>`
+          :`<div class="vc-resp" style="color:var(--text-3)">Awaiting result step…</div>`}
+        </div>
+      </div>
+      ${anom?`<div class="anom-bar" style="margin:0 14px 12px">⚠ SilentFailureDetector flagged this step</div>`:''}</div>`;
+  }
+  if(s.step_type==='tool_result'){
+    const out=((s.output_data||{}).output||(s.input_data||{}).output||'');
+    const isBlk=out.startsWith('[MOCK-BLOCKED]');
+    const isPat=s._patched||out.startsWith('[PATCHED]');
+    const isErr=!isBlk&&!isPat&&/^(DB ERROR|Error:|error:)/i.test(out);
+    const anom=plIsAnom(s);
+    const prevCall=PL.steps.slice(0,PL.idx).reverse().find(x=>x.step_type==='tool_call');
+    const prevInp=prevCall?((prevCall.input_data||{}).input||''):'';
+    const bg=isBlk?'var(--red-light)':isErr?'#FEF9C3':'var(--emerald-light)';
+    const bc=isBlk?'var(--red)':isErr?'#FDE047':'#86EFAC';
+    const lc=isBlk?'var(--red)':isErr?'#92400E':'#14532D';
+    return`<div class="viz-card"${anom?' style="border-left:3px solid var(--amber)"':''}>
+      <div class="vc-hd" style="background:${bg};border-color:${bc}">
+        <span class="vc-ico">${isBlk?'⛔':isErr?'⚠':'✓'}</span>
+        <span class="vc-title" style="color:${lc}">Tool Result${prevCall?' — '+plEsc(prevCall.name||''):''}</span>
+        ${isErr?`<span class="vc-sub" style="color:#92400E">Error response — anomaly</span>`:''}
+        ${anom?`<span style="font-size:9.5px;font-weight:700;color:var(--amber);background:var(--amber-light);padding:2px 7px;border-radius:99px;margin-left:auto">⚠ ANOMALY</span>`:''}
+      </div>
+      <div class="vc-body">
+        ${prevInp?`<div class="vc-lbl">Called with</div><div class="vc-ainput-val" style="margin-bottom:10px">${plEsc(prevInp.slice(0,130))}</div>`:''}
+        <div class="vc-lbl">${isBlk?'Blocked':isPat?'Patched':'Mock'} response</div>
+        <div style="font-family:var(--mono);font-size:11px;color:${isBlk?'var(--red)':isErr?'#92400E':'var(--text)'};background:${isBlk?'var(--red-light)':isErr?'#FEF9C3':'var(--ground)'};padding:8px 10px;border-radius:var(--r-sm);word-break:break-all;line-height:1.6;border:1px solid ${isBlk?'var(--red)':isErr?'#FDE047':'var(--border)'}">${plEsc(out.slice(0,300))}${out.length>300?'…':''}</div>
+        ${anom?`<div class="anom-bar" style="margin-top:8px">⚠ SilentFailureDetector: agent continued on error response</div>`:''}
+      </div></div>`;
+  }
+  if(s.step_type==='agent_finish'){
+    const fin=(s.input_data||{});
+    const ans=(fin.final_output&&(fin.final_output.output||JSON.stringify(fin.final_output)))||fin.log||'';
+    return`<div class="viz-card">
+      <div class="vc-hd" style="background:#F1F5F9;border-color:#CBD5E1">
+        <span class="vc-ico">◉</span><span class="vc-title" style="color:#475569">Agent Finish</span>
+        <span class="vc-sub">Run complete — ${PL.steps.length} steps</span>
+      </div>
+      <div class="vc-body">
+        <div class="vc-lbl">Final Answer</div>
+        <div class="vc-fin-ans">${plEsc(ans.replace(/^Final Answer:\s*/i,'').slice(0,500))}${ans.length>500?'…':''}</div>
+        <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text-2)">Trace: <strong style="color:var(--emerald)">✓ HMAC-verified</strong></span>
+          <span style="font-size:11px;color:var(--text-2)">Format: <strong>CBOR2 + gzip</strong></span>
+        </div>
+      </div></div>`;
+  }
+  return`<div class="viz-card"><div class="vc-body"><div class="vc-pre">${plEsc(JSON.stringify(s,null,2).slice(0,400))}</div></div></div>`;
+}
+
+function plToggle(){ PL.playing ? plStop() : plStart(); }
+function plStart(){
+  if(PL.idx>=PL.steps.length-1){ PL.idx=0; plRenderAt(0); }
+  PL.playing=true;
+  const btn=document.getElementById('plPlay');
+  btn.classList.add('play-act'); btn.textContent='⏸ Pause';
+  PL.timer=setInterval(()=>{ if(PL.idx>=PL.steps.length-1){ plStop(); return; } plRenderAt(PL.idx+1); },plSpeed);
+}
+function plStop(){
+  PL.playing=false; clearInterval(PL.timer);
+  const btn=document.getElementById('plPlay');
+  if(btn){ btn.classList.remove('play-act'); btn.textContent='▶ Play'; }
+}
+function plStep(d){ plStop(); plRenderAt(PL.idx+d); }
+function plGo(i){ plStop(); plRenderAt(i); }
+function plUpdateCtrl(){
+  document.getElementById('plFirst').disabled=PL.idx===0;
+  document.getElementById('plPrev').disabled=PL.idx===0;
+  document.getElementById('plNext').disabled=PL.idx>=PL.steps.length-1;
+  document.getElementById('plLast').disabled=PL.idx>=PL.steps.length-1;
+}
+function togglePLog(){
+  pLogOpen=!pLogOpen;
+  const hd=document.getElementById('logHd');
+  hd.classList.toggle('open',pLogOpen);
+  hd.querySelector('.log-hd-chev').textContent=pLogOpen?'▼':'▶';
+  document.getElementById('logRows').style.display=pLogOpen?'':'none';
+}
+function plStepCol(s){
+  const m={llm_start:'#3B82F6',llm_result:'#6366F1',tool_call:'#D97706',tool_result:'#059669',agent_finish:'#94A3B8'};
+  if(s.step_type==='tool_result'){
+    const o=((s.output_data||{}).output||(s.input_data||{}).output||'');
+    if(/^(DB ERROR|Error:)/i.test(o)) return '#DC2626';
+  }
+  return m[s.step_type]||'#94A3B8';
+}
+function plIsAnom(s){
+  if(!S.anomalies) return false;
+  return (S.anomalies.anomalies||[]).some(a=>a.step_index===s.step_index);
+}
+function plTags(s){
+  const out=((s.output_data||{}).output||(s.input_data||{}).output||'');
+  let t='';
+  if(s._patched||out.startsWith('[PATCHED]')) t+=`<span class="log-tag2 pat">[PATCHED]</span>`;
+  else if(out.startsWith('[MOCK-BLOCKED]')) t+=`<span class="log-tag2 blk">[BLOCKED]</span>`;
+  else if(s._simulated) t+=`<span class="log-tag2 mock">[MOCK]</span>`;
+  if(plIsAnom(s)) t+=`<span class="log-tag2 anom">⚠</span>`;
+  return t;
+}
+function plSnip(s){
+  if(s.step_type==='tool_call') return ((s.input_data||{}).input||'').slice(0,40);
+  if(s.step_type==='tool_result') return ((s.output_data||{}).output||(s.input_data||{}).output||'').slice(0,40);
+  if(s.step_type==='llm_result'){ const g=((s.input_data||{}).generations||[]); return (g[0]&&g[0][0]||'').slice(0,40); }
+  if(s.step_type==='llm_start'){ const p=((s.input_data||{}).prompts||[]); return (p[0]||'').slice(0,40); }
+  return '';
+}
+function plEsc(t){ return (t||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── Divergence ───────────────────────────────────────────────── */
+async function runDivergence() {
+  const prompt = document.getElementById('patchPrompt').value.trim()||null;
+  const step   = document.getElementById('patchStep').value;
+  const value  = document.getElementById('patchValue').value.trim();
+  if (!prompt && (!step||!value)) { toast('Provide a prompt patch OR step + value','err'); return; }
+  document.getElementById('divSpinner').style.display='flex';
+  document.getElementById('divResult').innerHTML='';
+  try {
+    const r = await api(`/runs/${S.selectedId}/diverge`,{method:'POST',body:JSON.stringify({
+      patch_prompt:prompt, patch_step:step?parseInt(step):null, patch_value:value||''
+    })});
+    const orig = r.original_tool_calls||[];
+    const div  = r.diverged_tool_calls||[];
+    const changed = JSON.stringify(orig)!==JSON.stringify(div);
+    const origH = orig.map(c=>`<div class="traj-step ${div.includes(c)?'same':'removed'}">${c}</div>`).join('');
+    const divH  = div.map(c=>`<div class="traj-step ${orig.includes(c)?'same':'added'}">${c}</div>`).join('');
+    document.getElementById('divResult').innerHTML = `
+      <div class="replay-result-card" style="margin-top:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:12px;font-weight:600">Trajectory Comparison</span>
+          <span class="badge" style="background:var(--${changed?'amber':'emerald'}-light);color:var(--${changed?'amber':'emerald'})">
+            ${changed?'⤢ Trajectory changed':'= Same trajectory'}
+          </span>
+        </div>
+        <div class="traj-grid">
+          <div class="traj-col"><div class="traj-col-title">Original</div>${origH||'<span style="color:var(--text-3);font-size:11px">—</span>'}</div>
+          <div class="traj-col"><div class="traj-col-title">Diverged</div>${divH||'<span style="color:var(--text-3);font-size:11px">—</span>'}</div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--text-3)">
+          New run: <code style="font-family:var(--mono)">${r.diverge_run_id||'—'}</code>
+        </div>
+      </div>`;
+    loadRuns();
+  } catch(e) { document.getElementById('divResult').innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:12px">Error: ${e.message}</div>`; }
+  finally { document.getElementById('divSpinner').style.display='none'; }
+}
+
+/* ── Integrity ────────────────────────────────────────────────── */
+async function checkIntegrity() {
+  try {
+    const r = await api(`/runs/${S.selectedId}/integrity`);
+    toast(r.clean ? '✓ Audit vault intact — all steps verified' : `⚠ ${r.tampered_steps.length} tampered step(s)`, r.clean?'ok':'err');
+  } catch(e) { toast('Integrity check failed: '+e.message,'err'); }
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id===`panel-${name}`));
+  if (name==='anomalies') renderAnomalies();
+  if (name==='analysis' && S.analysis) renderAnalysis();
+}
+
+/* ── Modal ────────────────────────────────────────────────────── */
+function openModal()  { document.getElementById('newRunModal').classList.add('open'); }
+function closeModal() { document.getElementById('newRunModal').classList.remove('open'); }
+async function triggerRun() {
+  const id = document.getElementById('ticketInput').value.trim(); if (!id) return;
+  closeModal();
+  document.getElementById('statusDot').style.background='#F59E0B';
+  document.getElementById('statusDot').classList.add('active');
+  document.getElementById('statusText').textContent = `Running ${id}…`;
+  try {
+    const r = await api('/agent/run',{method:'POST',body:JSON.stringify({ticket_id:id})});
+    toast(`Run recorded: ${r.run_id.slice(0,24)}…`,'ok');
+    await loadRuns(); selectRun(r.run_id);
+  } catch(e) { toast('Run failed: '+e.message,'err'); }
+  finally {
+    document.getElementById('statusDot').style.background='#10B981';
+    document.getElementById('statusDot').classList.remove('active');
+    document.getElementById('statusText').textContent='Ready';
+  }
+}
+
+/* ── Toast ────────────────────────────────────────────────────── */
+function toast(msg, type='') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(), 4000);
+}
+
+/* ── Status badge ─────────────────────────────────────────────── */
+function statusBadge(s) {
+  const m = {completed:{c:'completed',i:'●'},failed:{c:'failed',i:'✕'},running:{c:'running',i:'◌'}};
+  const b = m[s]||{c:'low',i:'·'};
+  return `<span class="badge badge-${b.c}">${b.i} ${s||'—'}</span>`;
+}
+
+/* ── JSON syntax highlight ────────────────────────────────────── */
+function hlJson(json) {
+  return json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[\dA-Fa-f]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      let c = 'jn';
+      if (/^"/.test(m)) c = /:$/.test(m) ? 'jk' : 'js';
+      else if (/true|false/.test(m)) c = 'jb';
+      else if (/null/.test(m)) c = 'jl';
+      return `<span class="${c}">${m}</span>`;
+    });
+}
+</script>
+</body>
+</html>

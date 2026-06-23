@@ -13,6 +13,9 @@ import sys
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -27,6 +30,22 @@ app = FastAPI(
     version="0.1.0",
     description="Agent Execution Tracer with AI Root Cause Analysis",
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+_STATIC = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=_STATIC), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def serve_ui():
+    """Serve the SentinelTrace dashboard UI."""
+    return FileResponse(_STATIC / "index.html")
 
 recorder = FlightRecorder()
 replay_engine = ReplayEngine(recorder)
@@ -50,6 +69,12 @@ class ReplayRequest(BaseModel):
 
 class AnalyzeRequest(BaseModel):
     hint: str = ""
+
+
+class DivergeRequest(BaseModel):
+    patch_step: int | None = None
+    patch_value: str = ""
+    patch_prompt: str | None = None
 
 
 # ── Runs ─────────────────────────────────────────────────────────────────────
@@ -168,6 +193,7 @@ def replay_run(run_id: str, req: ReplayRequest) -> dict:
         "divergence_detected": result.divergence_detected,
         "divergence_step": result.divergence_step,
         "divergence_details": result.divergence_details,
+        "outputs": result.outputs,
     }
 
 
@@ -200,3 +226,39 @@ def analyze_run(run_id: str, req: AnalyzeRequest) -> dict:
         "similar_run_ids": [r.run_id for r in similar],
         **report.to_dict(),
     }
+
+
+# ── Divergence replay ─────────────────────────────────────────────────────────
+
+@app.post("/runs/{run_id}/diverge", summary="Live divergence replay (prompt or tool result patch)")
+def diverge_run(run_id: str, req: DivergeRequest) -> dict:
+    """
+    Re-runs the agent with real LLM + mock tools.
+    Patch the prompt, a specific tool result, or both.
+    Returns original vs diverged tool call trajectories for comparison.
+    Satisfies 'Divergence editing' (prompt OR tool result) acceptance criterion.
+    """
+    if not recorder.get_steps(run_id):
+        raise HTTPException(404, f"No steps for run '{run_id}'")
+    from agent.jira_triage import run_divergence
+    try:
+        original_steps = recorder.get_steps(run_id)
+        orig_calls = [s.get("name", "?") for s in original_steps if s["step_type"] == "tool_call"]
+        div_run_id = run_divergence(
+            run_id,
+            patch_step=req.patch_step,
+            patch_value=req.patch_value,
+            patch_prompt=req.patch_prompt,
+        )
+        div_steps = recorder.get_steps(div_run_id) if div_run_id else []
+        div_calls = [s.get("name", "?") for s in div_steps if s["step_type"] == "tool_call"]
+        return {
+            "original_run_id": run_id,
+            "diverge_run_id": div_run_id,
+            "original_tool_calls": orig_calls,
+            "diverged_tool_calls": div_calls,
+            "trajectory_changed": orig_calls != div_calls,
+            "step_count_delta": len(div_steps) - len(original_steps),
+        }
+    except Exception as exc:
+        raise HTTPException(500, str(exc))

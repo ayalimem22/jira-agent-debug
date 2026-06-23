@@ -133,38 +133,50 @@ at any step and observe the new trajectory.
 
 ---
 
-## SLIDE 6 — The AI Mechanism: RootCauseSubAgent
+## SLIDE 6 — The Two AI Mechanisms
 
-### What it is
+SentinelTrace uses two dedicated LLM subagents — both run at temperature=0.
 
-A dedicated LLM call (temperature=0) that acts as a debugging expert.
-It receives the full serialized execution trace and returns a structured JSON
-diagnosis. It never sees the live system — only the recorded steps.
+### AI Mechanism 1 — SideEffectClassifier
 
-### What it returns
+Runs before every live agent run. Reads each tool's description and decides
+which ones have irreversible side effects. No hardcoded list, no manual annotation.
+
+```
+Input  : list of tools with names + descriptions
+Output : {"side_effect_tools": ["send_notification"],
+          "safe_tools": ["query_db", "search_kb", "get_user_info"],
+          "reasoning": {"send_notification": "Sends real messages — cannot be undone"},
+          "confidence": 0.98}
+```
+
+**Why this matters:** without it, SentinelTrace needs a per-agent hardcoded blocklist.
+With it, SentinelTrace is **generic** — it can safely replay any unknown agent.
+Falls back to a default set if the LLM is unavailable — safety never silently dropped.
+
+---
+
+### AI Mechanism 2 — RootCauseSubAgent
+
+Runs after a failure is detected. Receives the full serialized trace + few-shot
+context from similar past runs (PatternStore). Returns a structured JSON diagnosis.
 
 ```json
 {
-  "root_cause":      "Step 7: query_db returned DB ERROR because the SQL used
-                      ticket ID format 'DB-1193' but the table indexes by integer id",
-  "failed_step":     7,
-  "failed_variable": "sql",
-  "suggested_fix":   "SELECT * FROM tickets WHERE id = 'DB-1193'",
-  "category":        "RootCause",
-  "confidence":      0.87,
+  "root_cause":       "Step 7: query_db returned DB ERROR — SQL used unquoted string ID",
+  "failed_step":      7,
+  "failed_variable":  "sql",
+  "suggested_fix":    "SELECT * FROM tickets WHERE id = 'DB-1193'",
+  "category":         "RootCause",
+  "confidence":       0.87,
   "is_known_pattern": true,
-  "pattern_note":    "Same SQL format error seen in run b7c3a1f2 (similarity: 0.85)"
+  "pattern_note":     "Same SQL error seen in run b7c3a1f2 (similarity: 0.85)"
 }
 ```
 
-### Why it works better than self-debugging
-
-- **Dedicated context:** the subagent has the entire trace as its primary context,
-  not just the agent's current reasoning thread
-- **No conflict of interest:** the diagnosing agent did not make the mistake
-- **Cross-run context (PatternStore):** similar past failures are injected as
-  few-shot examples — the subagent recognizes recurring patterns immediately
-- **Structured output contract:** guaranteed JSON, 5 failure categories, confidence score
+**Why a dedicated subagent?** Microsoft Research (Debug2Fix, ACM Feb 2026):
+dedicated debugging subagent improves resolution rate by **+21%** vs. self-debugging.
+Separation of concerns — one agent acts, one agent diagnoses.
 
 ---
 

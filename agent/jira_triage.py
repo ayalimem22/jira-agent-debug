@@ -53,6 +53,7 @@ from flight_recorder.anomaly_detector import SilentFailureDetector
 from flight_recorder.pattern_store import PatternStore
 from flight_recorder.recorder import FlightRecorder, FlightRecorderCallback
 from flight_recorder.replay import ReplayEngine, ToolResponseQueue
+from flight_recorder.side_effect_classifier import SideEffectClassifier
 
 FIXTURES = Path(__file__).parent / "fixtures"
 DB_PATH = FIXTURES / "tickets.db"
@@ -132,6 +133,41 @@ def send_notification(input: str) -> str:
 
 TOOLS = [search_kb, query_db, get_user_info, send_notification]
 
+# ── AI side-effect classifier ─────────────────────────────────────────────────
+
+_classifier_cache: frozenset | None = None
+
+
+def _get_side_effects() -> frozenset:
+    """
+    Use the AI classifier to determine which tools have irreversible side effects.
+
+    Called once; result is cached for the session. This is the mechanism that
+    makes SentinelTrace generic: no hardcoded list, no manual annotation.
+    The LLM reads tool descriptions and decides what must be blocked in replay.
+    """
+    global _classifier_cache
+    if _classifier_cache is not None:
+        return _classifier_cache
+
+    print("\n[SentinelTrace] AI Tool Safety Classifier running…")
+    classifier = SideEffectClassifier()
+    report = classifier.classify(TOOLS)
+
+    if report.used_fallback:
+        print(f"  [warn] LLM unavailable — fallback set: {sorted(report.side_effect_tools)}")
+    else:
+        print(f"  Confidence        : {report.confidence:.0%}")
+        print(f"  Side-effect tools : {sorted(report.side_effect_tools)}")
+        print(f"  Safe tools        : {sorted(report.safe_tools)}")
+        for name, reason in report.reasoning.items():
+            if name != "_error":
+                marker = "⚠" if name in report.side_effect_tools else "✓"
+                print(f"    {marker} {name}: {reason}")
+
+    _classifier_cache = report.side_effect_tools
+    return _classifier_cache
+
 
 def build_divergence_tools(queue: ToolResponseQueue) -> list:
     """
@@ -180,6 +216,8 @@ def build_agent(temperature: float = 0.2) -> AgentExecutor:
 
 def run_live(ticket_id: str) -> str:
     """Run the agent live. Every call is recorded by FlightRecorderCallback."""
+    # Classify tools before running — AI determines which ones are safe to mock
+    _get_side_effects()
     run_id = recorder.start_run("jira_triage", ticket_id)
     cb = FlightRecorderCallback(recorder, run_id)
     executor = build_agent()
@@ -221,7 +259,7 @@ def run_live(ticket_id: str) -> str:
 def run_replay(run_id: str) -> None:
     """Replay a recorded run. Guaranteed: no live calls, no side effects."""
     print(f"\n[SentinelTrace] Replaying run {run_id} …")
-    engine = ReplayEngine(recorder)
+    engine = ReplayEngine(recorder, side_effect_tools=_get_side_effects())
     result = engine.replay(run_id)
     print(f"  Steps replayed     : {result.steps_replayed}")
     print(f"  Divergence detected: {result.divergence_detected}")
@@ -366,7 +404,7 @@ def auto_remediate(run_id: str) -> None:
 
     # ── 4. Verify — divergence replay with the real corrected result ──────────
     print(f"\n  Launching divergence replay with corrected result …")
-    run_divergence(run_id, patch_step=tool_call_step["step_index"], patch_value=corrected_result)
+    run_divergence(run_id, patch_step=tool_call_step["step_index"], patch_value=corrected_result, patch_prompt=None)
 
 
 def list_steps(run_id: str) -> None:
@@ -384,22 +422,37 @@ def list_steps(run_id: str) -> None:
         name = (s.get("name") or "")[:22]
         marker = " ◄ patch here?" if s["step_type"] == "tool_call" else ""
         print(f"  {s['step_index']:>4}  {s['step_type']:<15}  {name:<22}  {preview}{marker}")
-    print(f"\n  Patch a tool_call step with:")
+    print(f"\n  Patch a tool result:")
     print(f"  python agent/jira_triage.py . --diverge {run_id} --patch-step <N> --patch-value '<json>'")
+    print(f"\n  Patch the initial prompt:")
+    print(f"  python agent/jira_triage.py . --diverge {run_id} --patch-prompt 'new instruction here'")
 
 
-def run_divergence(run_id: str, patch_step: int, patch_value: str) -> str:
+def run_divergence(
+    run_id: str,
+    patch_step: int | None = None,
+    patch_value: str = "",
+    patch_prompt: str | None = None,
+) -> str:
     """
     Live divergence replay — re-runs the agent with real LLM + mock tools.
 
-    Tool calls return recorded responses up to patch_step.
-    At patch_step, the injected value is returned instead.
-    The LLM reasons freely with this new data → new trajectory recorded.
+    Two patching modes (can be combined):
+    - Tool result patch : tool calls return recorded responses, except at
+      patch_step where patch_value is injected. The LLM re-reasons with
+      the new data and may take a different trajectory.
+    - Prompt patch      : the initial instruction to the agent is replaced
+      with patch_prompt. All tool calls still return recorded responses
+      (mocked). Used to observe how a different instruction changes the
+      agent's decisions without touching live systems.
     """
     print(f"\n[SentinelTrace] Live Divergence Replay")
     print(f"  Original run   : {run_id}")
-    print(f"  Patching step  : {patch_step}")
-    print(f"  Injected value : {patch_value[:80]}")
+    if patch_prompt is not None:
+        print(f"  Prompt patch   : {patch_prompt[:100]}")
+    if patch_step is not None:
+        print(f"  Patching step  : {patch_step}")
+        print(f"  Injected value : {patch_value[:80]}")
 
     original_steps = recorder.get_steps(run_id)
     if not original_steps:
@@ -417,7 +470,12 @@ def run_divergence(run_id: str, patch_step: int, patch_value: str) -> str:
     )
 
     # Build mock tools backed by the recorded responses + patch
-    queue = ToolResponseQueue(original_steps, patch_step, patch_value)
+    queue = ToolResponseQueue(
+        original_steps,
+        patch_step_index=patch_step,
+        patch_value=patch_value if patch_step is not None else None,
+        side_effect_tools=_get_side_effects(),
+    )
     mock_tools = build_divergence_tools(queue)
 
     # New run ID for the divergence trajectory
@@ -434,9 +492,11 @@ def run_divergence(run_id: str, patch_step: int, patch_value: str) -> str:
         agent=agent, tools=mock_tools, verbose=True, handle_parsing_errors=True
     )
 
-    print(f"\n  Re-running agent with real LLM…\n")
+    effective_input = patch_prompt if patch_prompt is not None else original_input
+    print(f"\n  Re-running agent with real LLM…")
+    print(f"  Input: {effective_input[:120]}\n")
     try:
-        executor.invoke({"input": original_input}, config={"callbacks": [cb]})
+        executor.invoke({"input": effective_input}, config={"callbacks": [cb]})
         recorder.end_run(div_run_id, "completed")
     except Exception as exc:
         recorder.end_run(div_run_id, "failed")
@@ -452,10 +512,18 @@ def run_divergence(run_id: str, patch_step: int, patch_value: str) -> str:
     print(f"[SentinelTrace] Divergence Result")
     print(f"  Original run       : {run_id} ({len(original_steps)} steps)")
     print(f"  Divergence run     : {div_run_id} ({len(div_steps)} steps)")
-    print(f"  Patch injected at  : tool call #{q['patch_at_call_position']} (step {patch_step})")
     print(f"  Step count delta   : {len(div_steps) - len(original_steps):+d}")
-    print(f"\n  Original path  : {' → '.join(orig_calls)}")
-    print(f"  Diverged path  : {' → '.join(div_calls)}")
+
+    if patch_prompt is not None:
+        print(f"\n  Prompt change:")
+        print(f"    Original : {original_input[:100]}")
+        print(f"    Patched  : {patch_prompt[:100]}")
+
+    if patch_step is not None:
+        print(f"  Tool patch at      : tool call #{q['patch_at_call_position']} (step {patch_step})")
+
+    print(f"\n  Original path  : {' → '.join(orig_calls) or '(none)'}")
+    print(f"  Diverged path  : {' → '.join(div_calls) or '(none)'}")
     trajectory_changed = orig_calls != div_calls
     print(f"\n  Trajectory changed : {'YES ✓' if trajectory_changed else 'NO (same decisions)'}")
     print(f"\n  Analyze divergence run:")
@@ -514,8 +582,9 @@ if __name__ == "__main__":
     parser.add_argument("--analyze",     metavar="RUN_ID", help="AI root cause analysis")
     parser.add_argument("--diverge",     metavar="RUN_ID", help="Live divergence replay with real LLM")
     parser.add_argument("--list-steps",  metavar="RUN_ID", help="List all steps of a run")
-    parser.add_argument("--patch-step",  type=int, default=None, help="Step index to patch during divergence")
-    parser.add_argument("--patch-value", default="", help="Value to inject at the patched step")
+    parser.add_argument("--patch-step",   type=int, default=None, help="Step index to patch during divergence")
+    parser.add_argument("--patch-value",  default="", help="Value to inject at the patched step")
+    parser.add_argument("--patch-prompt", default=None, help="Replace the initial prompt during divergence replay")
     parser.add_argument("--auto-fix",    metavar="RUN_ID", help="Auto-remediate: detect → diagnose → fix → replay")
     parser.add_argument("--hint",        default="", help="Optional hint for the analyzer")
     args = parser.parse_args()
@@ -529,10 +598,18 @@ if __name__ == "__main__":
     elif args.analyze:
         run_analyze(args.analyze, hint=args.hint)
     elif args.diverge:
-        if args.patch_step is None or not args.patch_value:
-            print("ERROR: --diverge requires --patch-step and --patch-value")
-            print("  Use --list-steps <run_id> to find the step index to patch")
+        has_tool_patch   = args.patch_step is not None and args.patch_value
+        has_prompt_patch = args.patch_prompt is not None
+        if not has_tool_patch and not has_prompt_patch:
+            print("ERROR: --diverge requires at least one of:")
+            print("  --patch-prompt '<new instruction>'")
+            print("  --patch-step <N> --patch-value '<json>'  (use --list-steps to find N)")
         else:
-            run_divergence(args.diverge, args.patch_step, args.patch_value)
+            run_divergence(
+                args.diverge,
+                patch_step=args.patch_step,
+                patch_value=args.patch_value,
+                patch_prompt=args.patch_prompt,
+            )
     else:
         run_live(args.ticket_id)

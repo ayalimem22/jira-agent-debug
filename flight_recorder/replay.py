@@ -20,8 +20,8 @@ from typing import Any
 
 from flight_recorder.recorder import FlightRecorder
 
-# Tools whose live calls must never happen — even in test environments.
-# Extend this set as new side-effect tools are added to the agent.
+# Default fallback — used only when SideEffectClassifier is unavailable.
+# In normal operation this set is replaced by the AI-classified result.
 SIDE_EFFECT_TOOLS: frozenset[str] = frozenset({"send_notification", "send_email", "write_db"})
 
 
@@ -43,9 +43,16 @@ class MockInjector:
     Architectural guarantee: there is no code path that reaches a live endpoint.
     Side-effect tools are blocked by name before any recorded data is consulted.
     This guarantee holds regardless of replay configuration or environment flags.
+
+    side_effect_tools is injected by SideEffectClassifier at runtime so the
+    blocked set reflects the actual agent under observation, not a hardcoded list.
     """
 
-    def __init__(self, recorded_steps: list[dict]):
+    def __init__(
+        self,
+        recorded_steps: list[dict],
+        side_effect_tools: frozenset[str] | None = None,
+    ):
         # Build an ordered list of tool_result outputs (one per tool_call in order)
         self._tool_results: list[str] = [
             (s.get("output_data") or s.get("input_data") or {}).get("output", "")
@@ -53,10 +60,13 @@ class MockInjector:
             if s["step_type"] == "tool_result"
         ]
         self._cursor = 0
+        # AI-classified set takes precedence; fall back to hardcoded default
+        self._side_effects = side_effect_tools if side_effect_tools is not None \
+            else SIDE_EFFECT_TOOLS
 
     def get_response(self, tool_name: str, _tool_input: str) -> str:
         # Hard block — evaluated before any other logic
-        if tool_name in SIDE_EFFECT_TOOLS:
+        if tool_name in self._side_effects:
             return (
                 f"[MOCK-BLOCKED] {tool_name} is disabled in simulation mode. "
                 f"Recorded call intercepted. No live call was made."
@@ -118,6 +128,7 @@ class ToolResponseQueue:
         recorded_steps: list[dict],
         patch_step_index: int | None = None,
         patch_value: str | None = None,
+        side_effect_tools: frozenset[str] | None = None,
     ):
         self._entries: list[dict] = []
         for s in recorded_steps:
@@ -148,10 +159,12 @@ class ToolResponseQueue:
         self._patch_position = next(
             (i for i, e in enumerate(self._entries) if e["patched"]), None
         )
+        self._side_effects = side_effect_tools if side_effect_tools is not None \
+            else SIDE_EFFECT_TOOLS
 
     def pop(self, tool_name: str) -> str:
         """Return the next recorded response, or the patch if at the injected position."""
-        if tool_name in SIDE_EFFECT_TOOLS:
+        if tool_name in self._side_effects:
             return (
                 f"[MOCK-BLOCKED] {tool_name} is disabled in divergence replay. "
                 f"No live call was made."
@@ -178,9 +191,14 @@ class ReplayEngine:
     replay_with_patch()   — replay with one step overridden (test a fix)
     """
 
-    def __init__(self, recorder: FlightRecorder):
+    def __init__(
+        self,
+        recorder: FlightRecorder,
+        side_effect_tools: frozenset[str] | None = None,
+    ):
         self.recorder = recorder
         self.divergence = DivergenceEngine()
+        self._side_effects = side_effect_tools
 
     def replay(self, run_id: str) -> ReplayResult:
         """Replay a run exactly as recorded. Validates that no live calls occur."""
@@ -206,7 +224,7 @@ class ReplayEngine:
         patch_data: dict | None,
     ) -> ReplayResult:
         original_steps = self.recorder.get_steps(run_id)
-        injector = MockInjector(original_steps)
+        injector = MockInjector(original_steps, side_effect_tools=self._side_effects)
         replayed: list[dict] = []
 
         for step in original_steps:
