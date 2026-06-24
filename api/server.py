@@ -23,7 +23,7 @@ from flight_recorder.ai_debugger import RootCauseSubAgent
 from flight_recorder.anomaly_detector import SilentFailureDetector
 from flight_recorder.pattern_store import PatternStore
 from flight_recorder.recorder import FlightRecorder
-from flight_recorder.replay import ReplayEngine
+from flight_recorder.replay import ReplayEngine, TrajectoryDriftAnalyzer
 
 app = FastAPI(
     title="SentinelTrace",
@@ -252,6 +252,7 @@ def diverge_run(run_id: str, req: DivergeRequest) -> dict:
         )
         div_steps = recorder.get_steps(div_run_id) if div_run_id else []
         div_calls = [s.get("name", "?") for s in div_steps if s["step_type"] == "tool_call"]
+        drift = TrajectoryDriftAnalyzer().analyze(original_steps, div_steps)
         return {
             "original_run_id": run_id,
             "diverge_run_id": div_run_id,
@@ -259,6 +260,9 @@ def diverge_run(run_id: str, req: DivergeRequest) -> dict:
             "diverged_tool_calls": div_calls,
             "trajectory_changed": orig_calls != div_calls,
             "step_count_delta": len(div_steps) - len(original_steps),
+            "semantic_drift": drift.get("semantic_drift"),
+            "drift_summary": drift.get("drift_summary", ""),
+            "decision_point": drift.get("decision_point"),
         }
     except Exception as exc:
         raise HTTPException(500, str(exc))

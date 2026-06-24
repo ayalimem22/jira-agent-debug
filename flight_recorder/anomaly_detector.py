@@ -1,23 +1,29 @@
 """
-Silent Failure Detector — heuristic detection of runs that look successful but aren't.
+Silent Failure Detector — heuristic + LLM-based detection of runs that look
+successful but aren't.
 
 A silent failure is an agent run that completed without raising an exception
 but produced a wrong, incomplete, or hallucinated result. Standard log-based
 observability misses these entirely because there is no error to catch.
 
-This detector runs on recorded steps WITHOUT calling an LLM — it is fast,
-deterministic, and costs zero tokens. It flags suspicious patterns so the
-RootCauseSubAgent can be invoked with specific anomaly context.
+Two-layer detection:
 
-Six failure modes detected:
+Layer 1 — Heuristics (zero LLM cost, runs always):
+  MissingToolCall       — an expected tool was never called
+  ToolLoop              — same tool called 3+ times (stuck)
+  EmptyToolResult       — tool returned error / empty response
+  MalformedToolInput    — bad SQL or hostile tone in tool input
+  IgnoredToolResult     — tool result not referenced in next LLM output
+  PrematureTermination  — Final Answer reached too early
+  UncertainCompletion   — hedging language ("I think", "probably")
+  HallucinationSignal   — proper nouns in answer not found in tool data
 
-  MissingToolCall       — an expected tool was never called (agent skipped a step)
-  ToolLoop              — same tool called 3+ times with similar input (stuck)
-  IgnoredToolResult     — tool_result content not referenced in next LLM output
-  PrematureTermination  — Final Answer reached too early (few steps, no key tools)
-  UncertainCompletion   — Final Answer contains hedging language ("I think", "probably")
-  HallucinationSignal   — Final Answer mentions entities not present in any tool result
+Layer 2 — SemanticValidator (1 LLM call, only when heuristic confidence < 0.4):
+  Catches subtle hallucinations, semantically ignored tool data, and implicit
+  uncertainty that regex patterns miss. Replaces the three weakest heuristics
+  with a single grounded LLM judgment.
 """
+import json
 import re
 from dataclasses import dataclass, field
 from enum import Enum
@@ -31,6 +37,7 @@ class AnomalyType(str, Enum):
     PREMATURE_TERMINATION = "PrematureTermination"
     UNCERTAIN_COMPLETION = "UncertainCompletion"
     HALLUCINATION_SIGNAL = "HallucinationSignal"
+    MALFORMED_TOOL_INPUT = "MalformedToolInput"
 
 
 @dataclass
@@ -80,6 +87,17 @@ _HEDGE_PATTERNS = [
 ]
 _HEDGE_RE = re.compile("|".join(_HEDGE_PATTERNS), re.IGNORECASE)
 
+# Patterns that indicate a malformed SQL input (unquoted string identifier in WHERE)
+_SQL_BARE_ID_RE = re.compile(r"WHERE\s+\w+\s*=\s*[A-Z][A-Z0-9\-_]+\b(?!['\"])", re.IGNORECASE)
+
+# Keywords that suggest hostile/aggressive tone in a notification payload
+_AGGRESSIVE_PATTERNS = [
+    r"unacceptable", r"incompetent", r"immediately or face",
+    r"consequences", r"completely wrong", r"disgrace",
+    r"you (must|have to|need to) fix", r"(threatening|hostile)",
+]
+_AGGRESSIVE_RE = re.compile("|".join(_AGGRESSIVE_PATTERNS), re.IGNORECASE)
+
 
 def _extract_final_answer(steps: list[dict]) -> tuple[str, int | None]:
     """Return (final_answer_text, step_index) from the last llm_result, or ('', None)."""
@@ -106,6 +124,84 @@ def _llm_results(steps: list[dict]) -> list[dict]:
     return [s for s in steps if s["step_type"] == "llm_result"]
 
 
+class SemanticValidator:
+    """
+    LLM-based fallback detector for subtle failures that evade heuristics.
+
+    Called only when heuristic confidence < 0.4 — costs exactly 1 LLM call.
+    Catches: subtle hallucination, semantically ignored tool results, and
+    implicit uncertainty that regex patterns miss.
+
+    Replaces the three weakest heuristics (token-overlap IgnoredToolResult,
+    regex UncertainCompletion, proper-noun HallucinationSignal) with a single
+    grounded LLM judgment that understands semantics, not just surface patterns.
+    """
+
+    _SYSTEM = (
+        "You are a quality auditor for AI agent runs. "
+        "Your job is to find subtle issues in a Final Answer given the actual data "
+        "the agent received from its tools. Be strict but fair — only flag real issues."
+    )
+
+    def validate(
+        self,
+        final_answer: str,
+        tool_results_text: str,
+    ) -> list["Anomaly"]:
+        try:
+            from langchain_core.messages import HumanMessage, SystemMessage
+            from langchain_openai import ChatOpenAI
+        except ImportError:
+            return []
+
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        prompt = (
+            f"Tool results the agent received:\n"
+            f"---\n{tool_results_text[:2500]}\n---\n\n"
+            f"Final Answer the agent produced:\n"
+            f"---\n{final_answer[:800]}\n---\n\n"
+            "Identify subtle issues. Respond ONLY with valid JSON:\n"
+            '{"issues":['
+            '{"type":"HALLUCINATION|IGNORED_DATA|IMPLICIT_UNCERTAINTY",'
+            '"description":"one sentence","severity":"high|medium"}'
+            ']}\n'
+            'If no issues, return {"issues":[]}. '
+            "HALLUCINATION = answer mentions specific facts/names/numbers absent from tool results. "
+            "IGNORED_DATA = important tool result data completely absent from answer. "
+            "IMPLICIT_UNCERTAINTY = answer hedges subtly without explicit keywords."
+        )
+        try:
+            resp = llm.invoke([
+                SystemMessage(content=self._SYSTEM),
+                HumanMessage(content=prompt),
+            ])
+            raw = resp.content.strip()
+            # Strip markdown code fences if present
+            if raw.startswith("```"):
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
+            data = json.loads(raw)
+        except Exception:
+            return []
+
+        _type_map = {
+            "HALLUCINATION":       AnomalyType.HALLUCINATION_SIGNAL,
+            "IGNORED_DATA":        AnomalyType.IGNORED_TOOL_RESULT,
+            "IMPLICIT_UNCERTAINTY": AnomalyType.UNCERTAIN_COMPLETION,
+        }
+        anomalies = []
+        for issue in data.get("issues", []):
+            atype = _type_map.get(issue.get("type"), AnomalyType.HALLUCINATION_SIGNAL)
+            anomalies.append(Anomaly(
+                type=atype,
+                step_index=None,
+                description=f"[SemanticValidator] {issue.get('description', '')}",
+                severity=issue.get("severity", "medium"),
+            ))
+        return anomalies
+
+
 class SilentFailureDetector:
     """
     Heuristic detector for silent failures in recorded agent runs.
@@ -123,13 +219,15 @@ class SilentFailureDetector:
         # Tools that MUST appear in a successful run; missing = silent failure
         self.expected_tools = expected_tools or []
 
-    def detect(self, run_id: str, steps: list[dict]) -> DetectionReport:
+    def detect(self, run_id: str, steps: list[dict], semantic: bool = True) -> DetectionReport:
         report = DetectionReport(run_id=run_id)
 
+        # ── Layer 1: fast heuristics (zero LLM cost) ─────────────────────────
         checks = [
             self._check_missing_tools,
             self._check_tool_loops,
             self._check_empty_tool_results,
+            self._check_tool_call_inputs,
             self._check_ignored_results,
             self._check_premature_termination,
             self._check_uncertain_completion,
@@ -144,6 +242,28 @@ class SilentFailureDetector:
         # Confidence: weighted score — high anomaly = 0.4, medium = 0.2
         raw_conf = min(1.0, high * 0.4 + medium * 0.2 + len(report.anomalies) * 0.05)
         report.confidence = round(raw_conf, 2)
+
+        # ── Layer 2: SemanticValidator (1 LLM call, only when heuristics find nothing) ──
+        # The three weakest heuristics (token-overlap, regex uncertainty, proper-noun
+        # hallucination) have high false-positive and false-negative rates. When they
+        # find nothing, the SemanticValidator does a grounded LLM judgment instead.
+        if semantic and report.confidence < 0.4:
+            final_answer, _ = _extract_final_answer(steps)
+            tool_results_text = "\n\n".join(
+                f"[{s.get('name','tool')}]: "
+                + str((s.get("output_data") or s.get("input_data") or {}).get("output", ""))
+                for s in steps
+                if s["step_type"] == "tool_result"
+            )
+            if final_answer and tool_results_text:
+                semantic_anomalies = SemanticValidator().validate(final_answer, tool_results_text)
+                report.anomalies.extend(semantic_anomalies)
+                # Recalculate with semantic findings
+                high   = sum(1 for a in report.anomalies if a.severity == "high")
+                medium = sum(1 for a in report.anomalies if a.severity == "medium")
+                raw_conf = min(1.0, high * 0.4 + medium * 0.2 + len(report.anomalies) * 0.05)
+                report.confidence = round(raw_conf, 2)
+
         report.is_silent_failure = report.confidence >= 0.4 or high >= 1
 
         if not report.anomalies:
@@ -171,6 +291,48 @@ class SilentFailureDetector:
             )
             for t in missing
         ]
+
+    def _check_tool_call_inputs(self, steps: list[dict]) -> list[Anomaly]:
+        """
+        Inspect what the agent SENT to each tool — not just what came back.
+        Catches two classes of input-side problems:
+          1. Malformed SQL: unquoted string identifier in WHERE clause
+             (e.g. WHERE id = DB-1193 instead of WHERE id = 'DB-1193')
+          2. Aggressive/hostile content in send_notification payloads
+        Both are detectable before the tool result arrives — earlier signal,
+        zero LLM cost.
+        """
+        anomalies = []
+        for s in _tool_calls(steps):
+            tool_name = s.get("name", "")
+            raw_input = str((s.get("input_data") or {}).get("input", ""))
+
+            if tool_name == "query_db" and _SQL_BARE_ID_RE.search(raw_input):
+                anomalies.append(Anomaly(
+                    type=AnomalyType.MALFORMED_TOOL_INPUT,
+                    step_index=s["step_index"],
+                    description=(
+                        f"query_db call at step {s['step_index']} contains an unquoted "
+                        f"string identifier in the WHERE clause: '{raw_input[:120]}'. "
+                        f"Likely cause of DB ERROR in subsequent tool_result."
+                    ),
+                    severity="high",
+                ))
+
+            if tool_name == "send_notification":
+                match = _AGGRESSIVE_RE.search(raw_input)
+                if match:
+                    anomalies.append(Anomaly(
+                        type=AnomalyType.MALFORMED_TOOL_INPUT,
+                        step_index=s["step_index"],
+                        description=(
+                            f"send_notification at step {s['step_index']} contains "
+                            f"potentially hostile language: '{match.group()}'. "
+                            f"Payload: '{raw_input[:160]}'."
+                        ),
+                        severity="high",
+                    ))
+        return anomalies
 
     def _check_tool_loops(self, steps: list[dict]) -> list[Anomaly]:
         """Detect same tool called 3+ times in a row with similar input."""

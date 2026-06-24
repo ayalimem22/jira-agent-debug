@@ -13,16 +13,16 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 :root{
-  --ground:#F1F5F9;--surface:#FFFFFF;--surface-2:#F8FAFC;
-  --border:#E2E8F0;--border-2:#CBD5E1;
-  --text:#0F172A;--text-2:#64748B;--text-3:#94A3B8;
-  --blue:#1D4ED8;--blue-light:#EFF6FF;--blue-mid:#DBEAFE;
-  --amber:#D97706;--amber-light:#FFFBEB;--amber-mid:#FDE68A;
-  --emerald:#059669;--emerald-light:#ECFDF5;
-  --red:#DC2626;--red-light:#FEF2F2;
-  --indigo:#4F46E5;--indigo-light:#EEF2FF;
-  --shadow-sm:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.04);
-  --shadow:0 1px 3px rgba(15,23,42,.1),0 4px 6px rgba(15,23,42,.05);
+  --ground:#080E1A;--surface:#0F1C2E;--surface-2:#162438;
+  --border:#1E3450;--border-2:#28466A;
+  --text:#E8F4FF;--text-2:#7BA8CC;--text-3:#3A5878;
+  --blue:#4D9FFF;--blue-light:#0A1E38;--blue-mid:#153360;
+  --amber:#F59E0B;--amber-light:#1A1004;--amber-mid:#2C1C08;
+  --emerald:#00D4A0;--emerald-light:#041C14;
+  --red:#F06060;--red-light:#1E0808;
+  --indigo:#818CF8;--indigo-light:#0F1240;
+  --shadow-sm:0 2px 6px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.4);
+  --shadow:0 6px 24px rgba(0,0,0,.7),0 3px 10px rgba(0,0,0,.5);
   --r:8px;--r-sm:5px;
   --mono:'JetBrains Mono','Fira Code','Consolas','Courier New',monospace;
 }
@@ -33,13 +33,16 @@ body{
 /* Topbar */
 .topbar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;height:52px;background:var(--surface);
-  border-bottom:1px solid var(--border);flex-shrink:0;z-index:100;
+  padding:0 20px;height:52px;
+  background:linear-gradient(180deg,#122040 0%,var(--surface) 100%);
+  border-bottom:1px solid var(--border-2);flex-shrink:0;z-index:100;
+  box-shadow:0 2px 16px rgba(0,0,0,.5);
 }
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--text);letter-spacing:-.3px}
 .brand-icon{
   width:30px;height:30px;background:var(--blue);border-radius:7px;
   display:flex;align-items:center;justify-content:center;color:white;font-size:15px;
+  box-shadow:0 0 14px rgba(77,159,255,.55);
 }
 .brand-sub{font-size:11px;font-weight:400;color:var(--text-2);margin-left:2px}
 .topbar-right{display:flex;align-items:center;gap:12px}
@@ -59,7 +62,7 @@ body{
   border:1px solid transparent;transition:all .12s;white-space:nowrap;
 }
 .btn-primary{background:var(--blue);color:white;border-color:var(--blue)}
-.btn-primary:hover{background:#1E40AF}
+.btn-primary:hover{background:#1D4ED8}
 .btn-outline{background:transparent;color:var(--text);border-color:var(--border-2)}
 .btn-outline:hover{background:var(--ground)}
 .btn-ghost{background:transparent;color:var(--text-2);border-color:transparent}
@@ -90,7 +93,7 @@ body{
   border:1px solid var(--border);border-radius:var(--r-sm);
   font-size:12px;color:var(--text);outline:none;
 }
-.sidebar-search input:focus{border-color:var(--blue);background:white}
+.sidebar-search input:focus{border-color:var(--blue);background:var(--surface);box-shadow:0 0 0 3px var(--blue-light)}
 .sidebar-search .si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px}
 .runs-list{flex:1;overflow-y:auto;padding:5px 0}
 
@@ -187,12 +190,12 @@ body{
 }
 .tl-step:hover .tl-node{transform:scale(1.2)}
 .tl-label{font-size:9px;color:var(--text-3);margin-top:5px;text-align:center;white-space:nowrap;max-width:55px;overflow:hidden;text-overflow:ellipsis}
-.tl-node.llm_start{background:#DBEAFE;color:#1D4ED8;box-shadow:0 0 0 2px #BFDBFE}
-.tl-node.llm_result{background:#EEF2FF;color:#4F46E5;box-shadow:0 0 0 2px #C7D2FE}
-.tl-node.tool_call{background:#FEF3C7;color:#D97706;box-shadow:0 0 0 2px #FDE68A}
-.tl-node.tool_ok{background:#D1FAE5;color:#059669;box-shadow:0 0 0 2px #A7F3D0}
-.tl-node.tool_err{background:#FEE2E2;color:#DC2626;box-shadow:0 0 0 2px #FECACA}
-.tl-node.finish{background:#F1F5F9;color:#475569;box-shadow:0 0 0 2px #CBD5E1}
+.tl-node.llm_start{background:#0A1E38;color:#4D9FFF;box-shadow:0 0 0 2px #153360}
+.tl-node.llm_result{background:#0F1240;color:#818CF8;box-shadow:0 0 0 2px #1A1E58}
+.tl-node.tool_call{background:#1A1004;color:#F59E0B;box-shadow:0 0 0 2px #2C1C08}
+.tl-node.tool_ok{background:#041C14;color:#00D4A0;box-shadow:0 0 0 2px #0A3828}
+.tl-node.tool_err{background:#1E0808;color:#F06060;box-shadow:0 0 0 2px #2C1010}
+.tl-node.finish{background:#162438;color:#7BA8CC;box-shadow:0 0 0 2px #1E3450}
 
 /* Step cards */
 .steps-list{display:flex;flex-direction:column;gap:6px}
@@ -322,6 +325,51 @@ textarea.form-inp{resize:vertical;min-height:80px}
 
 @media(max-width:768px){.sidebar{width:250px}.traj-grid{grid-template-columns:1fr}}
 
+/* ── Cytoscape Graph Panel ──────────────────────────────────── */
+.cy-toolbar{display:flex;align-items:center;gap:4px;padding:7px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
+.cy-legend{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.cy-leg-item{display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--text-3);font-weight:500}
+.cy-leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;border:1.5px solid transparent}
+.graph-div-banner{flex-shrink:0;border-top:2px solid var(--amber);background:var(--amber-light);display:none}
+.graph-div-banner.vis{display:block}
+
+/* ── Graph Side Inspector (GSI) ─────────────────────────────── */
+.gsi-root{display:flex;flex-direction:column;gap:0}
+.gsi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.gsi-type-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.3px;border:1.5px solid transparent}
+.gsi-step-num{font-family:var(--mono);font-size:10.5px;color:var(--text-3);font-weight:700;background:var(--ground);padding:3px 9px;border-radius:99px;border:1px solid var(--border)}
+.gsi-tool-name{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--text);margin:8px 0 12px;letter-spacing:-.3px}
+.gsi-divider{height:1px;background:var(--border);margin:12px 0}
+.gsi-anom{display:flex;align-items:center;gap:8px;padding:7px 11px;background:var(--amber-light);border:1px solid var(--amber-mid);border-radius:var(--r-sm);font-size:11px;color:var(--amber);margin-bottom:10px;font-weight:600}
+/* Stats chips */
+.gsi-stats{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.gsi-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:9.5px;font-weight:700;border:1px solid transparent}
+.gsi-chip-blue{background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8}
+.gsi-chip-indigo{background:#EEF2FF;border-color:#C7D2FE;color:#4338CA}
+.gsi-chip-green{background:#F0FDF4;border-color:#BBF7D0;color:#15803D}
+.gsi-chip-slate{background:var(--ground);border-color:var(--border);color:#475569}
+/* Section */
+.gsi-sec{margin-bottom:14px}
+.gsi-sec-lbl{font-size:9px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.gsi-sec-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+/* Content blocks */
+.gsi-prose{font-size:11.5px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-word;background:var(--ground);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;max-height:180px;overflow-y:auto}
+.gsi-thought{font-size:11.5px;font-style:italic;color:var(--text-2);line-height:1.65;padding:9px 12px;background:var(--surface-2);border-radius:var(--r-sm);border-left:3px solid var(--border-2);margin-bottom:7px}
+.gsi-action{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:99px;font-size:11px;font-weight:700;color:var(--blue);margin-bottom:7px}
+.gsi-final{background:var(--emerald-light);border:1px solid #34D39933;border-left:3px solid var(--emerald);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--emerald);line-height:1.7}
+.gsi-code{font-family:var(--mono);font-size:10.5px;line-height:1.6;background:#0F172A;border-radius:var(--r-sm);padding:10px 12px;overflow-x:auto;white-space:pre;max-height:130px;overflow-y:auto;color:#CBD5E1}
+.gsi-code.err{background:#1A0505;border:1px solid #F43F5E40;color:#FCA5A5}
+.gsi-code.blk{background:#1A0505;border:1px solid #F4375E40;color:#FCA5A5;opacity:.9}
+.gsi-resp-hd{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.gsi-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:9.5px;font-weight:700}
+.gsi-status.ok{background:#041C14;color:#00D4A0;border:1px solid #0A3828}
+.gsi-status.err{background:#1E0808;color:#F06060;border:1px solid #2C1010}
+.gsi-status.blk{background:#1E0808;color:#F06060;border:1px dashed #F0606080}
+/* Patch section */
+.gsi-patch{margin-top:6px;padding:14px;background:var(--ground);border:1px solid var(--border);border-radius:var(--r);border-top:3px solid var(--amber)}
+.gsi-patch-lbl{font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.gsi-hidden-step{display:none}
+
 /* ── Replay Player ──────────────────────────────────────────────── */
 .pl-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden}
 .pl-start{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;text-align:center;padding:40px}
@@ -403,7 +451,7 @@ textarea.form-inp{resize:vertical;min-height:80px}
 .interceptor.safe{background:var(--blue);color:#fff}
 .interceptor.blk{background:var(--red);color:#fff}
 .interceptor.pat{background:var(--emerald);color:#fff}
-.vc-fin-ans{background:var(--emerald-light);border:1px solid #86EFAC;border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:#14532D;line-height:1.6;margin-top:8px}
+.vc-fin-ans{background:var(--emerald-light);border:1px solid #34D39933;border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--emerald);line-height:1.6;margin-top:8px}
 .anom-bar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--amber-light);border:1px solid var(--amber-mid);border-radius:var(--r-sm);font-size:11px;color:var(--amber);margin-top:8px}
 
 /* Exec log */
@@ -428,6 +476,244 @@ textarea.form-inp{resize:vertical;min-height:80px}
 .log-tag2.blk{background:var(--red-light);color:var(--red)}
 .log-tag2.pat{background:var(--emerald-light);color:var(--emerald)}
 .log-tag2.anom{background:var(--amber-light);color:var(--amber)}
+
+/* ── Dashboard ───────────────────────────────────────────────── */
+.dash{display:flex;flex-direction:column;gap:16px}
+.dash-section-title{font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.dash-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.dash-stat{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.dash-stat-n{font-size:22px;font-weight:700;color:var(--text);line-height:1;font-family:var(--mono)}
+.dash-stat-l{font-size:10px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.dash-stat.blue .dash-stat-n{color:var(--blue)}
+.dash-stat.emerald .dash-stat-n{color:var(--emerald)}
+.dash-stat.amber .dash-stat-n{color:var(--amber)}
+.dash-stat.indigo .dash-stat-n{color:var(--indigo)}
+.dash-anom{border-radius:var(--r);padding:14px 18px;border:1px solid;display:flex;align-items:flex-start;gap:14px}
+.dash-anom.ok{background:var(--emerald-light);border-color:#34D39933}
+.dash-anom.warn{background:var(--amber-light);border-color:#F59E0B33}
+.dash-anom.err{background:var(--red-light);border-color:#F8717133}
+.dash-anom-icon{font-size:28px;line-height:1;flex-shrink:0;margin-top:2px}
+.dash-anom-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.dash-anom-sub{font-size:11.5px;color:var(--text-2);line-height:1.5}
+.dash-anom-chips{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.dash-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:700;border:1px solid transparent}
+.dash-chip.high{background:var(--red-light);border-color:#F8717133;color:var(--red)}
+.dash-chip.medium{background:var(--amber-light);border-color:#F59E0B33;color:var(--amber)}
+.dash-chip.ok{background:var(--emerald-light);border-color:#34D39933;color:var(--emerald)}
+.dash-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dash-action-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px 12px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface-2);cursor:pointer;transition:all .15s;color:var(--text-2);text-align:center}
+.dash-action-btn:hover{background:var(--surface);border-color:var(--border-2);color:var(--text);transform:translateY(-2px);box-shadow:var(--shadow)}
+.dash-action-btn.primary{border-color:var(--blue);background:var(--blue-light)}
+.dash-action-btn.primary:hover{background:#1E3F6A;color:var(--text)}
+.dash-action-icon{font-size:22px;line-height:1}
+.dash-action-label{font-size:11.5px;font-weight:600}
+.dash-action-sub{font-size:10px;color:var(--text-3);margin-top:-4px}
+.dash-timeline{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.dash-anom-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.dash-anom-item{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:6px;background:var(--surface-2);border:1px solid var(--border);border-left:3px solid transparent}
+.dash-anom-item.high{border-left-color:var(--red)}
+.dash-anom-item.medium{border-left-color:var(--amber)}
+.dash-anom-type{font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px}
+.dash-anom-desc{font-size:11px;color:var(--text-2);line-height:1.5}
+
+/* ── Neo Graph ──────────────────────────────────────────────── */
+/* Full-page override when graph tab is active */
+#panel-graph.active{position:fixed!important;inset:0!important;z-index:200!important;display:flex!important;flex-direction:column!important;padding:0!important;overflow:hidden!important}
+
+.neo-graph-root{display:flex;flex-direction:column;flex:1;overflow:hidden;background:#060D18}
+.neo-toolbar-dark{
+  display:flex;align-items:center;gap:6px;padding:7px 18px;
+  background:#0A1828;border-bottom:1px solid #1A3050;flex-shrink:0;
+}
+.btn-neo{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
+  border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;
+  background:#0F2040;color:#7AACD0;border:1px solid #1E3D65;
+  transition:all .12s;
+}
+.btn-neo:hover{background:#1A3560;color:#C0DCFF;border-color:#2A4E80}
+.neo-div-badge{
+  display:none;font-size:10px;font-weight:700;color:#00E070;
+  background:#00C86420;border:1px solid #00C86455;border-radius:99px;
+  padding:2px 9px;
+}
+.neo-div-badge.vis{display:inline-flex;align-items:center;gap:5px}
+.neo-viewport{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;scrollbar-color:#1E3D65 #060D18;
+}
+.neo-viewport::-webkit-scrollbar{width:5px}
+.neo-viewport::-webkit-scrollbar-track{background:#060D18}
+.neo-viewport::-webkit-scrollbar-thumb{background:#1E3D65;border-radius:99px}
+.neo-panel{position:relative;min-height:300px}
+.neo-panel::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(77,159,255,.12) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+/* Nodes */
+.neo-node{
+  position:absolute;border-radius:50%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;
+  border:2px solid #1A3456;background:#0A1828;z-index:10;
+  transition:transform .15s,box-shadow .15s;
+}
+.neo-node:hover,.neo-node.sel{transform:scale(1.12)}
+.neo-node.sel{border-width:3px}
+.neo-n-llm{border-color:#00BFFF;box-shadow:0 0 20px #00BFFF66,0 0 8px #00BFFF44}
+.neo-n-llm.sel{box-shadow:0 0 34px #00BFFFBB,0 0 14px #00BFFF77}
+.neo-n-think{border-color:#818CF8;box-shadow:0 0 20px #818CF866,0 0 8px #818CF844}
+.neo-n-think.sel{box-shadow:0 0 34px #818CF8BB,0 0 14px #818CF877}
+.neo-n-tool{border-color:#F59E0B;box-shadow:0 0 20px #F59E0B66,0 0 8px #F59E0B44}
+.neo-n-tool.sel{box-shadow:0 0 34px #F59E0BBB,0 0 14px #F59E0B77}
+.neo-n-ok{border-color:#34D399;box-shadow:0 0 16px #34D39955,0 0 6px #34D39933}
+.neo-n-ok.sel{box-shadow:0 0 30px #34D399BB,0 0 12px #34D39977}
+.neo-n-err{border-color:#F87171;box-shadow:0 0 20px #F8717166,0 0 8px #F8717144}
+.neo-n-err.sel{box-shadow:0 0 34px #F87171BB,0 0 14px #F8717177}
+.neo-n-blk{border-color:#F43F5E;box-shadow:0 0 22px #F43F5E77,0 0 10px #F43F5E55}
+.neo-n-blk.sel{box-shadow:0 0 36px #F43F5ECC,0 0 16px #F43F5E88}
+.neo-n-fin{border-color:#34D399;border-width:3px;box-shadow:0 0 28px #34D39988,0 0 12px #34D39955,0 0 50px #34D39933}
+.neo-n-fin.sel{box-shadow:0 0 44px #34D399DD,0 0 20px #34D399AA}
+.neo-n-div{border-color:#00C864;box-shadow:0 0 20px #00C86466,0 0 8px #00C86444;border-style:dashed}
+.neo-n-div.sel{box-shadow:0 0 34px #00C864BB,0 0 14px #00C86477}
+@keyframes anomGlow{0%,100%{box-shadow:0 0 20px #F59E0B66,0 0 8px #F59E0B44}50%{box-shadow:0 0 32px #F59E0BCC,0 0 14px #F59E0B88}}
+.neo-n-anom{animation:anomGlow 1.6s ease-in-out infinite}
+.neo-node-icon{font-size:18px;line-height:1;margin-bottom:1px}
+.neo-node-num{font-size:8px;font-weight:700;color:#2A4E70;font-family:var(--mono);letter-spacing:.5px}
+/* Cards */
+.neo-card{
+  background:rgba(6,15,30,.88);border:1px solid #1A3456;border-radius:8px;
+  padding:9px 13px;cursor:pointer;
+  backdrop-filter:blur(8px);
+  transition:border-color .12s,box-shadow .12s;
+  z-index:5;
+}
+.neo-card:hover{border-color:#2A5090;box-shadow:0 0 16px rgba(0,191,255,.22)}
+.neo-card.div-c{background:rgba(14,60,40,.75);border-color:#00C86448}
+.neo-card.div-c:hover{border-color:#00C86478}
+.neo-card-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.neo-card-title{font-size:12px;font-weight:700;color:#B0CCEE;margin-bottom:4px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.neo-card-body{
+  font-size:10.5px;color:#3D6080;line-height:1.55;white-space:pre-line;
+  max-height:46px;overflow:hidden;cursor:pointer;
+  transition:max-height .2s;
+}
+.neo-card-body.exp{max-height:200px;overflow-y:auto}
+.neo-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.neo-tag{font-size:9px;font-weight:700;padding:1.5px 6px;border-radius:99px;border:1px solid transparent}
+.neo-tg-b{background:#00BFFF18;color:#5BC8F5;border-color:#00BFFF40}
+.neo-tg-v{background:#818CF818;color:#A5B4FC;border-color:#818CF840}
+.neo-tg-g{background:#34D39918;color:#6EE7B7;border-color:#34D39940}
+.neo-tg-a{background:#F59E0B18;color:#FCD34D;border-color:#F59E0B40}
+.neo-tg-r{background:#F8717118;color:#FCA5A5;border-color:#F8717140}
+/* SVG animation */
+@keyframes neoFlow{to{stroke-dashoffset:-22}}
+/* Live execution log */
+@keyframes neoStepIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.neo-live-hd{margin-bottom:12px}
+.neo-live-title{font-size:12px;font-weight:700;color:#F59E0B;margin-bottom:3px;display:flex;align-items:center;gap:7px}
+.neo-live-sub{font-size:10px;color:#A8CEDC}
+.neo-live-log{display:flex;flex-direction:column;gap:5px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1A3456 transparent}
+.neo-live-log::-webkit-scrollbar{width:3px}
+.neo-live-log::-webkit-scrollbar-thumb{background:#1A3456;border-radius:99px}
+.neo-live-step{
+  display:flex;gap:8px;align-items:flex-start;
+  padding:7px 10px;border-radius:6px;
+  background:rgba(0,80,160,.06);
+  border-left:2px solid #1A3456;
+  animation:neoStepIn .25s ease both;
+}
+.neo-live-step.s-llm{border-left-color:#00BFFF}
+.neo-live-step.s-think{border-left-color:#818CF8}
+.neo-live-step.s-tool{border-left-color:#F59E0B}
+.neo-live-step.s-ok{border-left-color:#34D399}
+.neo-live-step.s-err{border-left-color:#F87171}
+.neo-live-step.s-fin{border-left-color:#34D399;background:rgba(52,211,153,.06)}
+.neo-live-icon{font-size:14px;line-height:1;flex-shrink:0;margin-top:1px}
+.neo-live-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#2A4E70;margin-bottom:2px}
+.neo-live-content{font-size:10.5px;color:#7AACD0;line-height:1.45;font-family:var(--mono);white-space:pre-wrap;word-break:break-word;max-height:60px;overflow:hidden}
+.neo-live-spinner{display:flex;align-items:center;gap:8px;padding:10px 0;color:#2A4E70;font-size:11px}
+.neo-live-final{
+  margin-top:10px;padding:10px 12px;
+  background:rgba(0,200,100,.08);border:1px solid rgba(0,200,100,.25);
+  border-left:3px solid #00C864;border-radius:6px;
+  animation:neoStepIn .35s ease;
+}
+.neo-live-final-lbl{font-size:9px;font-weight:800;color:#00C864;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.neo-live-final-txt{font-size:11px;color:#60C880;line-height:1.6}
+/* Inspector — sidebar gauche */
+.neo-inspector{
+  position:absolute;top:0;left:0;bottom:0;width:360px;
+  background:rgba(6,14,28,.97);border-right:1px solid #1A3456;
+  box-shadow:6px 0 30px rgba(0,0,0,.60);
+  display:flex;flex-direction:column;overflow:hidden;
+  transform:translateX(-100%);
+  transition:transform .24s cubic-bezier(.22,1,.36,1);
+  pointer-events:none;z-index:50;
+}
+.neo-inspector.open{transform:translateX(0);pointer-events:auto}
+.neo-insp-hd{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+  background:#0C1C38;border-bottom:1px solid #1A3456;flex-shrink:0;
+}
+.neo-insp-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;
+  border:1.5px solid transparent;
+}
+.neo-insp-num{font-family:var(--mono);font-size:10px;color:#3D7098;font-weight:700;margin-left:auto}
+.neo-insp-close{background:none;border:none;color:#3D7098;cursor:pointer;font-size:15px;padding:0 4px;line-height:1}
+.neo-insp-close:hover{color:#80B8E0}
+/* Scrollable detail zone */
+.neo-insp-body{
+  flex:1;overflow-y:auto;padding:14px;
+  display:flex;flex-direction:column;gap:0;
+  scrollbar-width:thin;scrollbar-color:#1A3456 transparent;
+  min-height:0;
+}
+.neo-insp-body::-webkit-scrollbar{width:4px}
+.neo-insp-body::-webkit-scrollbar-thumb{background:#1A3456;border-radius:99px}
+/* Patch form pinned at bottom */
+.neo-insp-patch{
+  flex-shrink:0;padding:12px 14px;border-top:1px solid #1A3456;
+  display:flex;flex-direction:column;gap:8px;background:#0C1C38;
+}
+.neo-insp-right-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:#1E3A58;font-size:11px;text-align:center;line-height:1.8;gap:6px;
+}
+.neo-insp-right-empty .hint-icon{font-size:22px;opacity:.35}
+.neo-insp-sec{margin-bottom:11px}
+.neo-insp-sec-lbl{font-size:9px;font-weight:800;color:#2A4E70;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.neo-insp-sec-lbl::after{content:'';flex:1;height:1px;background:#112030}
+.neo-insp-stats{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.neo-insp-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:9.5px;font-weight:700;border:1px solid transparent}
+.neo-prose{font-size:11px;line-height:1.65;color:#7AACD0;white-space:pre-wrap;word-break:break-word;background:#060E1C;border:1px solid #112030;border-radius:6px;padding:8px 11px;max-height:120px;overflow-y:auto}
+.neo-thought{font-size:11px;font-style:italic;color:#4D7898;line-height:1.6;padding:7px 11px;background:#060E1C;border-radius:6px;border-left:3px solid #112030;margin-bottom:6px}
+.neo-action-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:#00BFFF1A;border:1px solid #00BFFF45;border-radius:99px;font-size:10.5px;font-weight:700;color:#7ADBF5}
+.neo-code{font-family:var(--mono);font-size:10px;line-height:1.55;background:#040A14;border:1px solid #0E2040;border-radius:6px;padding:8px 11px;overflow-x:auto;white-space:pre;max-height:100px;overflow-y:auto;color:#4D7898}
+.neo-code.err{background:#200A0A;border-color:#F8717145;color:#FCA5A5}
+.neo-final{background:rgba(14,50,30,.70);border:1px solid #00C86445;border-left:3px solid #00C864;border-radius:6px;padding:8px 11px;font-size:11px;color:#80D898;line-height:1.65}
+/* Patch form (right column) */
+.neo-patch-lbl{font-size:9.5px;font-weight:800;color:#FCD34D;text-transform:uppercase;letter-spacing:.5px}
+.neo-inp-dark{
+  width:100%;padding:9px 11px;
+  background:#060E1C;border:1px solid #112030;border-radius:6px;
+  font-size:11.5px;font-family:var(--mono);color:#7AACD0;
+  outline:none;resize:none;min-height:90px;
+  transition:border-color .15s,background .15s;
+}
+.neo-inp-dark:focus{border-color:rgba(0,191,255,.60);background:#0A1828}
+.neo-patch-hint{font-size:9.5px;color:#1E3A58;line-height:1.5}
+.neo-btn-glow{
+  width:100%;padding:9px;
+  background:linear-gradient(135deg,#2A3A10,#1E2A08);
+  border:1px solid #F59E0B55;border-radius:6px;
+  color:#FCD34D;font-size:11.5px;font-weight:700;cursor:pointer;
+  transition:all .14s;letter-spacing:.2px;
+}
+.neo-btn-glow:hover{border-color:#F59E0B;box-shadow:0 0 18px #F59E0B44;background:linear-gradient(135deg,#3A4A18,#2A3A10)}
 </style>
 </head>
 <body>
@@ -497,7 +783,9 @@ textarea.form-inp{resize:vertical;min-height:80px}
 
         <!-- Tabs -->
         <div class="tab-bar">
-          <div class="tab active" data-tab="steps"     onclick="switchTab('steps')">▤ Steps</div>
+          <div class="tab active" data-tab="overview"  onclick="switchTab('overview')">⊞ Overview</div>
+          <div class="tab"        data-tab="steps"     onclick="switchTab('steps')">▤ Steps</div>
+          <div class="tab"        data-tab="graph"     onclick="switchTab('graph')">◈ Graph</div>
           <div class="tab"        data-tab="anomalies" onclick="switchTab('anomalies')">⚠ Anomalies <span class="tab-badge" id="aBadge" style="display:none"></span></div>
           <div class="tab"        data-tab="analysis"  onclick="switchTab('analysis')">✦ Analysis</div>
           <div class="tab"        data-tab="replay"    onclick="switchTab('replay')">↺ Replay</div>
@@ -506,10 +794,41 @@ textarea.form-inp{resize:vertical;min-height:80px}
 
         <div class="tab-content">
 
+          <!-- OVERVIEW DASHBOARD -->
+          <div class="tab-panel active" id="panel-overview">
+            <div id="dashContent"><div class="loading-row"><div class="spinner"></div> Chargement…</div></div>
+          </div>
+
           <!-- STEPS -->
-          <div class="tab-panel active" id="panel-steps">
+          <div class="tab-panel" id="panel-steps">
             <div id="tlWrap"></div>
             <div class="steps-list" id="stepsList"></div>
+          </div>
+
+          <!-- GRAPH -->
+          <div class="tab-panel flex-panel" id="panel-graph">
+            <div class="neo-graph-root">
+              <div class="neo-toolbar-dark">
+                <button class="btn-neo" onclick="neoScrollTop()">↑ Top</button>
+                <button class="btn-neo" onclick="neoFit()">⊞ Center</button>
+                <button class="btn-neo" onclick="clearNeoDiv()">✕ Branch</button>
+                <span id="neoDivBadge" class="neo-div-badge">⤢ Diverge branch active</span>
+                <span id="neoAnomPill" style="display:none;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;background:#F59E0B18;border:1px solid #F59E0B44;font-size:10px;font-weight:700;color:#FCD34D;animation:anomGlow 1.6s ease-in-out infinite"></span>
+                <span id="neoDriftPill" style="display:none;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;background:#818CF818;border:1px solid #818CF844;font-size:10px;font-weight:700;color:#A5B4FC"></span>
+                <span style="margin-left:auto;font-size:9.5px;color:#C8E4F4;font-family:var(--mono)" id="neoStepCount"></span>
+              </div>
+              <div class="neo-viewport" id="neoViewport">
+                <div class="neo-panel" id="neoPanel"></div>
+              </div>
+              <div class="neo-inspector" id="neoInspector">
+                <div class="neo-insp-hd">
+                  <span class="neo-insp-badge" id="neoInspBadge"></span>
+                  <span class="neo-insp-num" id="neoInspNum"></span>
+                  <button class="neo-insp-close" onclick="closeNeoInspector()">✕</button>
+                </div>
+                <div class="neo-insp-body" id="neoInspBody"></div>
+              </div>
+            </div>
           </div>
 
           <!-- ANOMALIES -->
@@ -707,6 +1026,8 @@ function renderNoServer() {
 /* ── Select run ───────────────────────────────────────────────── */
 async function selectRun(id) {
   S.selectedId = id; S.steps=[]; S.anomalies=null; S.analysis=null;
+  const ap = document.getElementById('neoAnomPill'); if (ap) ap.style.display='none';
+  const dp = document.getElementById('neoDriftPill'); if (dp) dp.style.display='none';
   filterRuns(document.getElementById('searchInput').value);
   document.getElementById('emptyState').style.display = 'none';
   const rd = document.getElementById('runDetail');
@@ -718,9 +1039,10 @@ async function selectRun(id) {
     document.getElementById('hTime').textContent  = run.started_at ? '🕐 ' + new Date(run.started_at).toLocaleString() : '—';
     document.getElementById('hInput').textContent = run.input_text || '—';
   } catch {}
-  switchTab('steps');
+  switchTab('overview');
   await loadSteps(id);
-  loadAnomalies(id);
+  renderDashboard();
+  loadAnomalies(id).then(() => { renderDashboard(); });
 }
 
 /* ── Steps ────────────────────────────────────────────────────── */
@@ -730,6 +1052,7 @@ async function loadSteps(id) {
   document.getElementById('hSteps').textContent = '';
   try {
     S.steps = await api(`/runs/${id}/steps`);
+    _neoSteps = S.steps;
     document.getElementById('hSteps').textContent = S.steps.length + ' steps';
     renderTimeline(); renderStepsList();
   } catch(e) {
@@ -788,13 +1111,26 @@ function scrollToStep(i) {
 
 /* ── Anomalies ────────────────────────────────────────────────── */
 async function loadAnomalies(id) {
-  if (S.anomalies) return;
+  if (S.anomalies) return S.anomalies;
   try {
     S.anomalies = await api(`/runs/${id}/anomalies`);
     const n = S.anomalies.anomaly_count||0;
+    // Tab badge
     const b = document.getElementById('aBadge');
     b.textContent = n; b.style.display = n>0 ? 'inline-flex' : 'none';
+    // Graph toolbar anomaly pill
+    const pill = document.getElementById('neoAnomPill');
+    if (pill) {
+      const H = (S.anomalies.anomalies||[]).filter(a=>a.severity==='high').length;
+      pill.textContent = `⚠ ${n} anomal${n>1?'ies':'y'}${H?' · '+H+' high':''}`;
+      pill.style.display = n>0 ? 'inline-flex' : 'none';
+    }
+    // Re-render anomaly panel if active
     if (document.getElementById('panel-anomalies').classList.contains('active')) renderAnomalies();
+    // Re-render graph with anomaly badges if graph tab is active
+    if (document.getElementById('panel-graph').classList.contains('active') && _neoSteps.length) {
+      renderNeoGraph(_neoSteps, _neoDivSteps);
+    }
   } catch {}
 }
 function renderAnomalies() {
@@ -1161,6 +1497,9 @@ async function runDivergence() {
           New run: <code style="font-family:var(--mono)">${r.diverge_run_id||'—'}</code>
         </div>
       </div>`;
+    // keep div steps for graph
+    let ds=[]; try{ if(r.diverge_run_id) ds=await api(`/runs/${r.diverge_run_id}/steps`); }catch{}
+    _neoDivSteps = ds.length ? ds : null;
     loadRuns();
   } catch(e) { document.getElementById('divResult').innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:12px">Error: ${e.message}</div>`; }
   finally { document.getElementById('divSpinner').style.display='none'; }
@@ -1178,8 +1517,12 @@ async function checkIntegrity() {
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id===`panel-${name}`));
+  if (name==='overview')  renderDashboard();
   if (name==='anomalies') renderAnomalies();
   if (name==='analysis' && S.analysis) renderAnalysis();
+  if (name==='graph') {
+    if (S.steps.length) renderNeoGraph(_neoSteps.length ? _neoSteps : S.steps, _neoDivSteps);
+  }
 }
 
 /* ── Modal ────────────────────────────────────────────────────── */
@@ -1217,6 +1560,683 @@ function statusBadge(s) {
   const m = {completed:{c:'completed',i:'●'},failed:{c:'failed',i:'✕'},running:{c:'running',i:'◌'}};
   const b = m[s]||{c:'low',i:'·'};
   return `<span class="badge badge-${b.c}">${b.i} ${s||'—'}</span>`;
+}
+
+/* ── Dashboard ────────────────────────────────────────────────── */
+function renderDashboard() {
+  const el = document.getElementById('dashContent');
+  if (!el || !S.steps.length) return;
+
+  // Compute stats from steps
+  const totalTokIn  = S.steps.reduce((a,s)=>a+(s.tokens_in||0), 0);
+  const totalTokOut = S.steps.reduce((a,s)=>a+(s.tokens_out||0), 0);
+  const totalCost   = S.steps.reduce((a,s)=>a+(s.cost_usd||0), 0);
+  const toolCalls   = S.steps.filter(s=>s.step_type==='tool_call');
+  const llmCalls    = S.steps.filter(s=>s.step_type==='llm_result');
+  const hasErr      = S.steps.some(s=>s.step_type==='tool_result'&&/^(DB ERROR|error:)/i.test(((s.output_data||{}).output||(s.input_data||{}).output)||''));
+
+  // Anomaly state
+  const anom = S.anomalies;
+  const anomH = anom ? anom.anomalies.filter(a=>a.severity==='high').length : 0;
+  const anomM = anom ? anom.anomalies.filter(a=>a.severity==='medium').length : 0;
+  const anomTotal = anom ? anom.anomaly_count||0 : null;
+
+  // Anomaly card
+  let anomCard = '';
+  if (anom === null) {
+    anomCard = `<div class="dash-anom warn"><div class="dash-anom-icon">⏳</div><div><div class="dash-anom-title">Scanning for anomalies…</div><div class="dash-anom-sub">Heuristic + SemanticValidator running</div></div></div>`;
+  } else if (anomTotal === 0) {
+    anomCard = `<div class="dash-anom ok"><div class="dash-anom-icon">✓</div><div><div class="dash-anom-title">No anomalies detected</div><div class="dash-anom-sub">${anom.summary||'All heuristic and semantic checks passed.'}</div></div></div>`;
+  } else {
+    const topAnoms = (anom.anomalies||[]).slice(0,3);
+    anomCard = `<div class="dash-anom ${anomH>0?'err':'warn'}">
+      <div class="dash-anom-icon">${anomH>0?'⚠':'⚡'}</div>
+      <div style="flex:1">
+        <div class="dash-anom-title">${anomTotal} anomal${anomTotal>1?'ies':'y'} detected</div>
+        <div class="dash-anom-sub">${anom.summary||''}</div>
+        <div class="dash-anom-chips">
+          ${anomH?`<span class="dash-chip high">⬤ ${anomH} High</span>`:''}
+          ${anomM?`<span class="dash-chip medium">⬤ ${anomM} Medium</span>`:''}
+          <span class="dash-chip ok" onclick="switchTab('anomalies')" style="cursor:pointer">View all →</span>
+        </div>
+        <div class="dash-anom-list">${topAnoms.map(a=>`
+          <div class="dash-anom-item ${a.severity}">
+            <div><div class="dash-anom-type">${a.type}${a.step_index!=null?' · step '+a.step_index:''}</div>
+            <div class="dash-anom-desc">${plEsc(a.description.slice(0,120))}</div></div>
+          </div>`).join('')}</div>
+      </div></div>`;
+  }
+
+  // Timeline mini
+  const tlHtml = S.steps.map((s,i) => {
+    const m = stepMeta(s);
+    const isAnom = anom && (anom.anomalies||[]).some(a=>a.step_index===s.step_index);
+    return (i>0?'<div style="height:2px;flex:1;min-width:6px;max-width:22px;background:var(--border);margin-top:9px;flex-shrink:0"></div>':'')
+      + `<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;cursor:pointer" onclick="switchTab('steps');scrollToStep(${s.step_index})">
+          <div class="tl-node ${m.cls}" style="${isAnom?'outline:2px solid var(--amber);outline-offset:2px':''};">${m.icon}</div>
+        </div>`;
+  }).join('');
+
+  el.innerHTML = `<div class="dash">
+    <div>
+      <div class="dash-section-title">Execution stats</div>
+      <div class="dash-stats">
+        <div class="dash-stat blue"><div class="dash-stat-n">${S.steps.length}</div><div class="dash-stat-l">Total steps</div></div>
+        <div class="dash-stat indigo"><div class="dash-stat-n">${llmCalls.length}/${toolCalls.length}</div><div class="dash-stat-l">LLM / Tool calls</div></div>
+        <div class="dash-stat ${totalTokIn+totalTokOut>0?'amber':''}"><div class="dash-stat-n">${totalTokIn+totalTokOut>0?(totalTokIn+totalTokOut).toLocaleString():'—'}</div><div class="dash-stat-l">Tokens total</div></div>
+        <div class="dash-stat ${totalCost>0?'emerald':''}"><div class="dash-stat-n">${totalCost>0?'$'+(totalCost*1000).toFixed(2)+'m':'—'}</div><div class="dash-stat-l">Estimated cost</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="dash-section-title">Execution timeline</div>
+      <div class="dash-timeline"><div style="display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:4px">${tlHtml}</div></div>
+    </div>
+
+    <div>
+      <div class="dash-section-title">Silent failure analysis</div>
+      ${anomCard}
+    </div>
+
+    <div>
+      <div class="dash-section-title">Actions</div>
+      <div class="dash-actions">
+        <div class="dash-action-btn primary" onclick="switchTab('graph')">
+          <div class="dash-action-icon">◈</div>
+          <div class="dash-action-label">Execution Graph</div>
+          <div class="dash-action-sub">Visualisation interactive</div>
+        </div>
+        <div class="dash-action-btn" onclick="runAnalysis()">
+          <div class="dash-action-icon">✦</div>
+          <div class="dash-action-label">AI Root Cause</div>
+          <div class="dash-action-sub">RootCauseSubAgent</div>
+        </div>
+        <div class="dash-action-btn" onclick="switchTab('diverge')">
+          <div class="dash-action-icon">⤢</div>
+          <div class="dash-action-label">Divergence Replay</div>
+          <div class="dash-action-sub">Patch prompt ou step</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── Neo Graph ─────────────────────────────────────────── */
+let _neoSteps = [];
+let _neoDivSteps = null;
+let _neoSelIdx = null;
+
+// Layout constants
+const NEO = {
+  R: 46,      // node radius
+  SH: 155,    // step height
+  PT: 55,     // padding top
+  xA: 0.22,   // left column (fraction of width)
+  xB: 0.60,   // right column
+  xC: 0.84,   // diverged branch column
+};
+
+function _neoNodeCls(s) {
+  if (s.step_type === 'llm_start')   return 'neo-n-llm';
+  if (s.step_type === 'llm_result')  return 'neo-n-think';
+  if (s.step_type === 'tool_call')   return 'neo-n-tool';
+  if (s.step_type === 'agent_finish') return 'neo-n-fin';
+  if (s.step_type === 'tool_result') {
+    const o = ((s.output_data||{}).output||(s.input_data||{}).output||'');
+    if (o.startsWith('[MOCK-BLOCKED]')) return 'neo-n-blk';
+    if (/^(DB ERROR|error:|not found)/i.test(o)) return 'neo-n-err';
+    return 'neo-n-ok';
+  }
+  return 'neo-n-ok';
+}
+function _neoIcon(s) {
+  const m = {llm_start:'📤',llm_result:'🧠',tool_call:'⚙',tool_result:'▸',agent_finish:'◉'};
+  return m[s.step_type]||'·';
+}
+function _neoTypeName(s) {
+  const m = {llm_start:'LLM Prompt',llm_result:'LLM Response',tool_call:'Tool Call',tool_result:'Tool Result',agent_finish:'Final Answer'};
+  return m[s.step_type]||s.step_type;
+}
+function _neoSnippet(s) {
+  if (s.step_type === 'llm_start') {
+    const p = (((s.input_data||{}).prompts)||[])[0]||'';
+    const hi = p.lastIndexOf('Human:');
+    return (hi>0 ? p.slice(hi+7) : p).slice(0,180).trim();
+  }
+  if (s.step_type === 'llm_result') {
+    const gen = (((s.input_data||{}).generations||[])[0]||[])[0]||'';
+    const g = typeof gen==='string'?gen:(gen.text||'');
+    const th = g.match(/Thought:(.*?)(?=Action:|Final Answer:|$)/s);
+    const act = g.match(/Action:\s*(\w+)/);
+    const fin = g.match(/Final Answer:(.*?)$/s);
+    let out = '';
+    if (th) out += th[1].trim().slice(0,100);
+    if (act) out += (out?'\n':'')+'→ Action: '+act[1];
+    if (fin) out += (out?'\n':'')+'◉ '+fin[1].trim().slice(0,80);
+    return out || g.slice(0,150);
+  }
+  if (s.step_type === 'tool_call') return ((s.input_data||{}).input||'').slice(0,180);
+  if (s.step_type === 'tool_result') {
+    const o = ((s.output_data||{}).output||(s.input_data||{}).output||'');
+    if (o.startsWith('[MOCK-BLOCKED]')) return '🚫 Blocked by MockInjector';
+    return o.replace(/^\[MOCK\]\s*/,'').slice(0,180);
+  }
+  if (s.step_type === 'agent_finish') return (((s.input_data||{}).final_output||{}).output||'').slice(0,200);
+  return '';
+}
+function _neoClrForCls(cls) {
+  const m = {'neo-n-llm':'#00BFFF','neo-n-think':'#818CF8','neo-n-tool':'#F59E0B','neo-n-ok':'#34D399','neo-n-err':'#F87171','neo-n-blk':'#F43F5E','neo-n-fin':'#34D399','neo-n-div':'#00C864'};
+  return m[cls]||'#5BC8F5';
+}
+function _neoTagsHTML(s, isDiv) {
+  const tags = [];
+  const cls = _neoNodeCls(s);
+  if (s.tokens_in)  tags.push(`<span class="neo-tag neo-tg-b">↑${s.tokens_in}tok</span>`);
+  if (s.tokens_out) tags.push(`<span class="neo-tag neo-tg-v">↓${s.tokens_out}tok</span>`);
+  if (s.cost_usd)   tags.push(`<span class="neo-tag neo-tg-g">$${(s.cost_usd*1000).toFixed(2)}m</span>`);
+  if (cls==='neo-n-err'||cls==='neo-n-blk') tags.push(`<span class="neo-tag neo-tg-r">${cls==='neo-n-blk'?'BLOCKED':'ERROR'}</span>`);
+  if (isDiv) tags.push(`<span class="neo-tag neo-tg-g">⤢ diverged</span>`);
+  const anomaly = S.anomalies && (S.anomalies.anomalies||[]).some(a=>a.step_index===s.step_index);
+  if (anomaly) tags.push(`<span class="neo-tag neo-tg-a">⚠ anomaly</span>`);
+  return tags.length ? `<div class="neo-card-tags">${tags.join('')}</div>` : '';
+}
+
+function _findDivStart(orig, div) {
+  if (!div||!div.length) return -1;
+  const oCalls = orig.filter(s=>s.step_type==='tool_call').map(s=>s.name);
+  const dCalls = div.filter(s=>s.step_type==='tool_call').map(s=>s.name);
+  for (let i=0; i<Math.min(oCalls.length,dCalls.length); i++) {
+    if (oCalls[i]!==dCalls[i]) return i;
+  }
+  if (dCalls.length !== oCalls.length) return Math.min(oCalls.length,dCalls.length);
+  return div.length > orig.length ? orig.length - 1 : -1;
+}
+
+function renderNeoGraph(steps, divSteps) {
+  _neoSteps = steps||[];
+  _neoDivSteps = divSteps&&divSteps.length ? divSteps : null;
+  _neoSelIdx = null;
+
+  const vp = document.getElementById('neoViewport');
+  const panel = document.getElementById('neoPanel');
+  if (!panel) return;
+
+  const W = vp ? vp.offsetWidth||900 : 900;
+  const {R, SH, PT} = NEO;
+  const nS = _neoSteps.length;
+  const nD = _neoDivSteps ? _neoDivSteps.length : 0;
+  const divStart = _findDivStart(_neoSteps, _neoDivSteps);
+  const hasBranch = _neoDivSteps && divStart >= 0;
+
+  let svgInner = '', html = '', totalH;
+
+  if (!hasBranch) {
+    // ── Mode zigzag (pas de branche) ──────────────────────
+    const xA = Math.round(W * NEO.xA);
+    const xB = Math.round(W * NEO.xB);
+    totalH = PT + nS * SH + 120;
+
+    for (let i = 0; i < nS - 1; i++) {
+      const cx1 = i%2===0 ? xA : xB, cy1 = PT + i*SH + R;
+      const cx2 = (i+1)%2===0 ? xA : xB, cy2 = PT + (i+1)*SH + R;
+      const cpy = (cy1+cy2)/2;
+      svgInner += `<path d="M${cx1},${cy1} C${cx1},${cpy} ${cx2},${cpy} ${cx2},${cy2}"
+        fill="none" stroke="#4A7AAE" stroke-width="2" stroke-dasharray="6 5"
+        style="animation:neoFlow 2s linear infinite"/>`;
+    }
+
+    _neoSteps.forEach((s, i) => {
+      const cx = i%2===0 ? xA : xB;
+      const cy = PT + i*SH;
+      const isRight = i%2===1;
+      const cls = _neoNodeCls(s), clr = _neoClrForCls(cls);
+      const anomaly = S.anomalies&&(S.anomalies.anomalies||[]).some(a=>a.step_index===s.step_index);
+      const num = String(i+1).padStart(2,'0');
+
+      html += `<div class="neo-node ${cls}${anomaly?' neo-n-anom':''}" id="neoN${i}"
+        style="left:${cx-R}px;top:${cy}px;width:${R*2}px;height:${R*2}px"
+        onclick="selectNeoNode(${i})">
+        <div class="neo-node-icon">${_neoIcon(s)}</div>
+        <div class="neo-node-num">STEP ${num}</div>
+      </div>`;
+      html += `<div style="position:absolute;left:${cx-4}px;top:${cy+R-4}px;width:8px;height:8px;border-radius:50%;background:${clr};box-shadow:0 0 10px ${clr},0 0 25px ${clr}66;pointer-events:none;z-index:3"></div>`;
+
+      const snippet = _neoSnippet(s), typeName = _neoTypeName(s), title = s.name||typeName;
+      const cardPos = isRight
+        ? `right:${W-cx+R+16}px;max-width:${cx-R-30}px`
+        : `left:${cx+R+16}px;max-width:${W-cx-R-30}px`;
+      html += `<div class="neo-card" style="position:absolute;${cardPos};top:${cy+6}px" onclick="selectNeoNode(${i})">
+        <div class="neo-card-lbl" style="color:${clr}">${typeName}</div>
+        <div class="neo-card-title">${plEsc(title)}</div>
+        <div class="neo-card-body" onclick="event.stopPropagation();this.classList.toggle('exp')">${plEsc(snippet)}</div>
+        ${_neoTagsHTML(s,false)}
+      </div>`;
+    });
+
+  } else {
+    // ── Mode deux colonnes (avec branche divergée) ─────────
+    // Colonne gauche  : original  — nœud à 18%, carte de 26% à 47%
+    // Colonne droite  : divergé   — nœud à 82%, carte de 53% à 74%
+    const xOrig = Math.round(W * 0.18);
+    const xDiv  = Math.round(W * 0.82);
+    const cLft  = Math.round(W * 0.26);  // carte orig : début
+    const cMid  = Math.round(W * 0.47);  // carte orig : fin
+    const cMid2 = Math.round(W * 0.53);  // carte div  : début
+    const cRgt  = Math.round(W * 0.74);  // carte div  : fin
+    const cardOrigW = cMid - cLft;
+    const cardDivW  = cRgt - cMid2;
+
+    totalH = PT + Math.max(nS, nD) * SH + 120;
+
+    // Ligne centrale de séparation
+    svgInner += `<line x1="${W/2}" y1="${PT}" x2="${W/2}" y2="${totalH-60}"
+      stroke="#4C7CAE" stroke-width="1" stroke-dasharray="4 6" opacity="0.25"/>`;
+
+    // Chaîne originale (droite vers bas)
+    for (let i = 0; i < nS - 1; i++) {
+      const cy1 = PT + i*SH + R, cy2 = PT + (i+1)*SH + R;
+      svgInner += `<line x1="${xOrig}" y1="${cy1}" x2="${xOrig}" y2="${cy2}"
+        stroke="#4A7AAE" stroke-width="2" stroke-dasharray="6 5"
+        style="animation:neoFlow 2s linear infinite"/>`;
+    }
+
+    // Ligne de fork vers branche divergée
+    const forkOrigCy = PT + divStart*SH + R;
+    const forkDivCy  = PT + (divStart+1)*SH + R;
+    svgInner += `<path d="M${xOrig},${forkOrigCy} C${xOrig+60},${forkOrigCy} ${xDiv-60},${forkDivCy} ${xDiv},${forkDivCy}"
+      fill="none" stroke="#00C864" stroke-width="2" stroke-dasharray="7 5" opacity="0.8"
+      style="animation:neoFlow 1.8s linear infinite"/>`;
+
+    // Chaîne divergée
+    for (let i = divStart+1; i < nD - 1; i++) {
+      const cy1 = PT + i*SH + R, cy2 = PT + (i+1)*SH + R;
+      svgInner += `<line x1="${xDiv}" y1="${cy1}" x2="${xDiv}" y2="${cy2}"
+        stroke="#00C864" stroke-width="2" stroke-dasharray="7 5" opacity="0.6"
+        style="animation:neoFlow 1.8s linear infinite"/>`;
+    }
+
+    // Labels de colonnes
+    html += `<div style="position:absolute;left:${cLft}px;top:${PT-28}px;font-size:9px;font-weight:800;color:#4A7AAE;text-transform:uppercase;letter-spacing:.8px">◀ Trajectoire originale</div>`;
+    html += `<div style="position:absolute;left:${cMid2}px;top:${PT-28}px;font-size:9px;font-weight:800;color:#00C864;text-transform:uppercase;letter-spacing:.8px">⤢ Branche divergée</div>`;
+
+    // Nœuds + cartes originaux
+    _neoSteps.forEach((s, i) => {
+      const cy = PT + i*SH;
+      const cls = _neoNodeCls(s), clr = _neoClrForCls(cls);
+      const anomaly = S.anomalies&&(S.anomalies.anomalies||[]).some(a=>a.step_index===s.step_index);
+      const num = String(i+1).padStart(2,'0');
+
+      html += `<div class="neo-node ${cls}${anomaly?' neo-n-anom':''}" id="neoN${i}"
+        style="left:${xOrig-R}px;top:${cy}px;width:${R*2}px;height:${R*2}px"
+        onclick="selectNeoNode(${i})">
+        <div class="neo-node-icon">${_neoIcon(s)}</div>
+        <div class="neo-node-num">STEP ${num}</div>
+      </div>`;
+      html += `<div style="position:absolute;left:${xOrig-4}px;top:${cy+R-4}px;width:8px;height:8px;border-radius:50%;background:${clr};box-shadow:0 0 10px ${clr},0 0 25px ${clr}66;pointer-events:none;z-index:3"></div>`;
+
+      const snippet = _neoSnippet(s), typeName = _neoTypeName(s), title = s.name||typeName;
+      html += `<div class="neo-card" style="position:absolute;left:${cLft}px;width:${cardOrigW}px;top:${cy+6}px" onclick="selectNeoNode(${i})">
+        <div class="neo-card-lbl" style="color:${clr}">${typeName}</div>
+        <div class="neo-card-title">${plEsc(title)}</div>
+        <div class="neo-card-body" onclick="event.stopPropagation();this.classList.toggle('exp')">${plEsc(snippet)}</div>
+        ${_neoTagsHTML(s,false)}
+      </div>`;
+    });
+
+    // Nœuds + cartes divergés
+    _neoDivSteps.forEach((s, i) => {
+      if (i <= divStart) return;
+      const cy = PT + i*SH;
+      const cls = _neoNodeCls(s);
+      const num = String(i+1).padStart(2,'0');
+
+      html += `<div class="neo-node neo-n-div" id="neoD${i}"
+        style="left:${xDiv-R}px;top:${cy}px;width:${R*2}px;height:${R*2}px"
+        onclick="selectNeoDivNode(${i})">
+        <div class="neo-node-icon">${_neoIcon(s)}</div>
+        <div class="neo-node-num">DIV ${num}</div>
+      </div>`;
+      html += `<div style="position:absolute;left:${xDiv-4}px;top:${cy+R-4}px;width:8px;height:8px;border-radius:50%;background:#00C864;box-shadow:0 0 10px #00C864,0 0 25px #00C86466;pointer-events:none;z-index:3"></div>`;
+
+      const snippet = _neoSnippet(s);
+      html += `<div class="neo-card div-c" style="position:absolute;left:${cMid2}px;width:${cardDivW}px;top:${cy+6}px" onclick="selectNeoDivNode(${i})">
+        <div class="neo-card-lbl" style="color:#00C864">${_neoTypeName(s)}</div>
+        <div class="neo-card-title" style="color:#B0ECC8">${plEsc(s.name||_neoTypeName(s))}</div>
+        <div class="neo-card-body" onclick="event.stopPropagation();this.classList.toggle('exp')">${plEsc(snippet)}</div>
+        ${_neoTagsHTML(s,true)}
+      </div>`;
+    });
+  }
+
+  panel.style.height = totalH+'px';
+  panel.innerHTML = `
+    <style>@keyframes neoFlow{to{stroke-dashoffset:-22}}</style>
+    <svg style="position:absolute;top:0;left:0;width:100%;height:${totalH}px;pointer-events:none;overflow:visible">${svgInner}</svg>
+    ${html}`;
+
+  const sc = document.getElementById('neoStepCount');
+  if (sc) sc.textContent = nS+' steps'+(nD?' · '+nD+' diverged':'');
+  const db = document.getElementById('neoDivBadge');
+  if (db) db.className = 'neo-div-badge'+(nD?' vis':'');
+}
+
+function selectNeoNode(idx) {
+  _neoSelIdx = idx;
+  document.querySelectorAll('.neo-node').forEach(n=>n.classList.remove('sel'));
+  const el = document.getElementById('neoN'+idx);
+  if (el) el.classList.add('sel');
+  openNeoInspector(_neoSteps[idx], false);
+}
+
+function selectNeoDivNode(idx) {
+  document.querySelectorAll('.neo-node').forEach(n=>n.classList.remove('sel'));
+  const el = document.getElementById('neoD'+idx);
+  if (el) el.classList.add('sel');
+  openNeoInspector(_neoDivSteps[idx], true);
+}
+
+function openNeoInspector(s, isDiv) {
+  const insp = document.getElementById('neoInspector');
+  if (!insp) return;
+
+  const cls = _neoNodeCls(s);
+  const clr = _neoClrForCls(cls);
+  const typeName = _neoTypeName(s);
+
+  document.getElementById('neoInspBadge').innerHTML = `${_neoIcon(s)} ${typeName}`;
+  document.getElementById('neoInspBadge').style.cssText = `background:${clr}15;color:${clr};border-color:${clr}35`;
+  document.getElementById('neoInspNum').textContent = '#'+s.step_index+(isDiv?' (diverged)':'');
+
+  // ── Extract data ─────────────────────────────────────────
+  const prompt   = s.step_type==='llm_start'?(((s.input_data||{}).prompts)||[])[0]||'':'';
+  const gens     = s.step_type==='llm_result'?(((s.input_data||{}).generations)||[]):[];
+  const rawGen   = gens[0]&&gens[0][0]||'';
+  const genTxt   = typeof rawGen==='string'?rawGen:(rawGen.text||'');
+  const toolIn   = s.step_type==='tool_call'?((s.input_data||{}).input||''):'';
+  const toolOut  = ((s.output_data||{}).output||(s.input_data||{}).output||'');
+  const finalOut = s.step_type==='agent_finish'?(((s.input_data||{}).final_output)||{}).output||'':'';
+  const anomaly  = S.anomalies&&(S.anomalies.anomalies||[]).some(a=>a.step_index===s.step_index);
+
+  // ── Stats chips ──────────────────────────────────────────
+  let chips = '';
+  if (s.model_name) chips += `<span class="neo-insp-chip" style="background:#1E3A5F;color:#5BC8F5;border-color:#2A5080">${plEsc(s.model_name)}</span>`;
+  if (s.tokens_in)  chips += `<span class="neo-insp-chip" style="background:#00BFFF10;color:#5BC8F5;border-color:#00BFFF35">↑ ${s.tokens_in}tok</span>`;
+  if (s.tokens_out) chips += `<span class="neo-insp-chip" style="background:#818CF810;color:#A5B4FC;border-color:#818CF835">↓ ${s.tokens_out}tok</span>`;
+  if (s.cost_usd)   chips += `<span class="neo-insp-chip" style="background:#34D39910;color:#6EE7B7;border-color:#34D39935">$${(s.cost_usd*1000).toFixed(3)}m</span>`;
+
+  // ── Content ──────────────────────────────────────────────
+  function parseReAct(txt) {
+    const parts=[];
+    const th=txt.match(/Thought:(.*?)(?=Action:|Final Answer:|$)/s);
+    const act=txt.match(/Action:\s*(\w+)/);
+    const ai=txt.match(/Action Input:(.*?)(?=Observation:|$)/s);
+    const fin=txt.match(/Final Answer:(.*?)$/s);
+    if(th)  parts.push({t:'thought',v:th[1].trim()});
+    if(act) parts.push({t:'action', v:act[1].trim()});
+    if(ai)  parts.push({t:'ainput', v:ai[1].trim()});
+    if(fin) parts.push({t:'final',  v:fin[1].trim()});
+    if(!parts.length&&txt.trim()) parts.push({t:'raw',v:txt.trim()});
+    return parts;
+  }
+
+  // ── Trouver le step LLM jumeau (start↔result) ───────────────
+  const allSteps = _neoSteps.concat(_neoDivSteps||[]);
+  let pairedPrompt = '', pairedGenTxt = '';
+  if (s.step_type === 'llm_start') {
+    // chercher le llm_result qui suit immédiatement
+    const paired = allSteps.find(r => r.step_index === s.step_index + 1 && r.step_type === 'llm_result');
+    if (paired) {
+      const pg = ((paired.input_data||{}).generations||[]); const raw = pg[0]&&pg[0][0]||'';
+      pairedGenTxt = typeof raw==='string'?raw:(raw.text||'');
+    }
+    pairedPrompt = prompt;
+  } else if (s.step_type === 'llm_result') {
+    // chercher le llm_start qui précède immédiatement
+    const paired = allSteps.find(r => r.step_index === s.step_index - 1 && r.step_type === 'llm_start');
+    if (paired) pairedPrompt = (((paired.input_data||{}).prompts)||[])[0]||'';
+    pairedGenTxt = genTxt;
+  }
+  const isLlmStep = s.step_type === 'llm_start' || s.step_type === 'llm_result';
+
+  let content = '';
+  if (anomaly) content += `<div style="display:flex;align-items:center;gap:7px;padding:7px 11px;background:#F59E0B12;border:1px solid #F59E0B35;border-radius:6px;font-size:11px;color:#FCD34D;margin-bottom:12px;font-weight:600">⚠ SilentFailureDetector anomaly</div>`;
+
+  if (isLlmStep) {
+    // ── Bloc unifié Input → LLM → Réponse ───────────────────
+    // 1. Input envoyé au LLM
+    const hi = pairedPrompt.lastIndexOf('Human:');
+    const shownPrompt = pairedPrompt
+      ? (hi>0 ? pairedPrompt.slice(hi) : pairedPrompt.slice(-700))
+      : '';
+    if (shownPrompt) {
+      content += `<div class="neo-insp-sec">
+        <div class="neo-insp-sec-lbl" style="color:#5BC8F5">📤 Input envoyé au LLM</div>
+        <div class="neo-prose" style="border-color:#00BFFF30;background:#00BFFF08">${plEsc(shownPrompt)}</div>
+        <details style="margin-top:5px">
+          <summary style="font-size:10px;color:var(--text-3);cursor:pointer;padding:2px 0">Voir le prompt complet…</summary>
+          <div class="neo-prose" style="margin-top:5px;max-height:250px;border-color:#00BFFF20;font-size:10px">${plEsc(pairedPrompt)}</div>
+        </details>
+      </div>`;
+    }
+
+    // 2. Réaction du LLM
+    if (pairedGenTxt) {
+      const parts = parseReAct(pairedGenTxt);
+      let inner = '';
+      for (const p of parts) {
+        if (p.t==='thought') inner += `<div class="neo-thought" style="border-left-color:#818CF8;background:#818CF808">${plEsc(p.v.slice(0,400))}</div>`;
+        else if (p.t==='action') inner += `<div style="margin-bottom:7px;display:flex;align-items:center;gap:7px"><span style="font-size:9px;font-weight:800;color:#6A9ABE;text-transform:uppercase;letter-spacing:.5px">Action</span><span class="neo-action-badge">⚡ ${plEsc(p.v)}</span></div>`;
+        else if (p.t==='ainput') inner += `<div style="margin-bottom:7px"><div style="font-size:9px;font-weight:800;color:#6A9ABE;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Action Input</div><div class="neo-code">${plEsc(p.v.slice(0,300))}</div></div>`;
+        else if (p.t==='final')  inner += `<div class="neo-final">${plEsc(p.v.slice(0,400))}</div>`;
+        else inner += `<div class="neo-code">${plEsc(p.v.slice(0,300))}</div>`;
+      }
+      content += `<div class="neo-insp-sec">
+        <div class="neo-insp-sec-lbl" style="color:#818CF8">🧠 Réaction du LLM</div>
+        ${inner}
+      </div>`;
+    } else if (s.step_type==='llm_start') {
+      content += `<div class="neo-insp-sec"><div class="neo-insp-sec-lbl" style="color:#818CF8">🧠 Réaction du LLM</div><div style="font-size:11px;color:var(--text-3);padding:8px;font-style:italic">Step llm_result non encore enregistré…</div></div>`;
+    }
+
+  } else {
+    // ── Steps non-LLM (tool_call, tool_result, agent_finish) ──
+    if (toolIn) {
+      content += `<div class="neo-insp-sec"><div class="neo-insp-sec-lbl">Input envoyé au tool</div><div class="neo-code">${plEsc(toolIn.slice(0,350))}</div></div>`;
+    }
+    if (s.step_type==='tool_result') {
+      const isBlocked=toolOut.startsWith('[MOCK-BLOCKED]');
+      const isErr=/^(DB ERROR|error:|not found)/i.test(toolOut)&&!isBlocked;
+      const statusStyle=isBlocked?'color:#F43F5E':isErr?'color:#F87171':'color:#34D399';
+      const statusLbl=isBlocked?'🚫 Blocked':isErr?'✕ Error':'✓ Success';
+      const display=toolOut.replace(/^\[MOCK(-BLOCKED)?\]\s*/,'');
+      content += `<div class="neo-insp-sec"><div class="neo-insp-sec-lbl">Réponse du tool <span style="${statusStyle};font-weight:700">${statusLbl}</span></div><div class="neo-code${isBlocked||isErr?' err':''}">${plEsc(display.slice(0,350))}</div></div>`;
+    }
+    if (finalOut) {
+      content += `<div class="neo-insp-sec"><div class="neo-insp-sec-lbl">Final Answer</div><div class="neo-final">${plEsc(finalOut.slice(0,500))}</div></div>`;
+    }
+    if (!toolIn && !toolOut && !finalOut) {
+      content += `<div style="font-size:11px;color:var(--text-3);padding:8px;font-style:italic">Aucune donnée pour ce step.</div>`;
+    }
+  }
+
+  // ── Patch form (pinned bottom) ───────────────────────────
+  let patchForm = '';
+  if (!isDiv && s.step_type==='llm_start') {
+    const hi = prompt.lastIndexOf('Human:');
+    const prefill = plEsc((hi>0 ? prompt.slice(hi+7) : prompt).slice(0,600));
+    patchForm = `<div class="neo-insp-patch">
+      <div class="neo-patch-lbl">⤢ Patch Prompt &amp; Diverge</div>
+      <textarea class="neo-inp-dark" id="gpatchPrompt" placeholder="Nouvelle instruction…">${prefill}</textarea>
+      <button class="neo-btn-glow" onclick="runGraphDivergence('prompt')">⤢ Run Divergence Replay</button>
+      <div id="gDivSpinner" style="display:none;align-items:center;gap:6px"><div class="spinner" style="border-top-color:#F59E0B;width:13px;height:13px;flex-shrink:0"></div><span style="font-size:10.5px;color:#92BAD4">Running…</span></div>
+      <div class="neo-patch-hint">Remplace l'instruction — LLM re-raisonne avec mock tools.</div>
+    </div>`;
+  } else if (!isDiv && s.step_type==='tool_call') {
+    patchForm = `<div class="neo-insp-patch">
+      <div class="neo-patch-lbl">⤢ Inject Result — step ${s.step_index}</div>
+      <input type="hidden" id="gpatchStep" value="${s.step_index}">
+      <textarea class="neo-inp-dark" id="gpatchValue" placeholder='[{"id":"PROD-2847","status":"open"}]'></textarea>
+      <button class="neo-btn-glow" onclick="runGraphDivergence('tool')">⤢ Run Divergence Replay</button>
+      <div id="gDivSpinner" style="display:none;align-items:center;gap:6px"><div class="spinner" style="border-top-color:#F59E0B;width:13px;height:13px;flex-shrink:0"></div><span style="font-size:10.5px;color:#92BAD4">Running…</span></div>
+      <div class="neo-patch-hint">Injecte une réponse mock — LLM re-raisonne depuis ce point.</div>
+    </div>`;
+  }
+
+  const emptyPatch = !patchForm ? `<div class="neo-insp-right-empty">
+    <span class="hint-icon">⤢</span>
+    Sélectionner un step <strong style="color:#5A88A8">LLM Prompt</strong> ou <strong style="color:#5A88A8">Tool Call</strong> pour patcher &amp; diverger.
+  </div>` : '';
+
+  document.getElementById('neoInspBody').innerHTML =
+    (chips ? `<div class="neo-insp-stats" style="margin-bottom:12px">${chips}</div>` : '') +
+    content + emptyPatch;
+
+  // Patch form goes outside body (pinned at bottom of sidebar)
+  const existingPatch = insp.querySelector('.neo-insp-patch');
+  if (existingPatch) existingPatch.remove();
+  if (patchForm) insp.insertAdjacentHTML('beforeend', patchForm);
+
+  insp.classList.add('open');
+  // Décaler le graph vers la droite pour ne pas masquer les nœuds
+  requestAnimationFrame(() => {
+    const vp = document.getElementById('neoViewport');
+    if (vp && insp) vp.style.paddingLeft = insp.offsetWidth + 'px';
+  });
+}
+
+function closeNeoInspector() {
+  const insp = document.getElementById('neoInspector');
+  if (insp) { insp.classList.remove('open'); const p=insp.querySelector('.neo-insp-patch'); if(p) p.remove(); }
+  const vp = document.getElementById('neoViewport');
+  if (vp) vp.style.paddingLeft = '0';
+  document.querySelectorAll('.neo-node').forEach(n=>n.classList.remove('sel'));
+  _neoSelIdx = null;
+}
+
+function clearNeoDiv() {
+  _neoDivSteps = null;
+  if (_neoSteps.length) renderNeoGraph(_neoSteps, null);
+  closeNeoInspector();
+}
+
+function neoScrollTop() {
+  const vp = document.getElementById('neoViewport');
+  if (vp) vp.scrollTo({top:0, behavior:'smooth'});
+}
+function neoFit() {
+  const vp = document.getElementById('neoViewport');
+  if (vp) vp.scrollTo({top:0, behavior:'smooth'});
+}
+
+function _liveStepCls(s) {
+  const m = {llm_start:'s-llm',llm_result:'s-think',tool_call:'s-tool',agent_finish:'s-fin'};
+  if (s.step_type==='tool_result') {
+    const o = ((s.output_data||{}).output||(s.input_data||{}).output||'');
+    return /^(DB ERROR|error:|not found)/i.test(o)||o.startsWith('[MOCK-BLOCKED]') ? 's-err' : 's-ok';
+  }
+  return m[s.step_type]||'s-ok';
+}
+
+async function runGraphDivergence(mode) {
+  let body = {};
+  if (mode==='prompt') {
+    const v = ((document.getElementById('gpatchPrompt')||{}).value||'').trim();
+    if (!v) { toast('Entrer un nouveau prompt','err'); return; }
+    body.patch_prompt = v;
+  } else {
+    const step  = parseInt(((document.getElementById('gpatchStep')||{}).value||''));
+    const value = ((document.getElementById('gpatchValue')||{}).value||'').trim();
+    if (!value) { toast('Entrer une valeur à injecter','err'); return; }
+    body.patch_step = step; body.patch_value = value;
+  }
+
+  // ── Afficher le log live dans le sidebar ─────────────────
+  const insp = document.getElementById('neoInspector');
+  const inspBody = document.getElementById('neoInspBody');
+  const patchEl = insp ? insp.querySelector('.neo-insp-patch') : null;
+  if (patchEl) patchEl.style.display = 'none';
+  if (inspBody) inspBody.innerHTML = `
+    <div class="neo-live-hd">
+      <div class="neo-live-title">
+        <div class="spinner" style="width:13px;height:13px;border-top-color:#F59E0B;flex-shrink:0"></div>
+        ⤢ Divergence en cours…
+      </div>
+      <div class="neo-live-sub">L'agent re-raisonne depuis le point de patch</div>
+    </div>
+    <div id="neoLiveLog" class="neo-live-log"></div>`;
+
+  try {
+    const r = await api(`/runs/${S.selectedId}/diverge`, {method:'POST', body:JSON.stringify(body)});
+    let divSteps = [];
+    if (r.diverge_run_id) { try { divSteps = await api(`/runs/${r.diverge_run_id}/steps`); } catch{} }
+
+    // ── Animer les steps un par un ───────────────────────────
+    const liveLog = document.getElementById('neoLiveLog');
+    if (liveLog && divSteps.length) {
+      // Mettre à jour le titre
+      if (inspBody) {
+        const title = inspBody.querySelector('.neo-live-title');
+        if (title) title.innerHTML = `⤢ Exécution divergée — ${divSteps.length} steps`;
+        const sub = inspBody.querySelector('.neo-live-sub');
+        if (sub) sub.textContent = r.trajectory_changed ? 'Trajectoire modifiée ✓' : 'Même trajectoire';
+      }
+
+      for (let i = 0; i < divSteps.length; i++) {
+        await new Promise(res => setTimeout(res, 180));
+        const s = divSteps[i];
+        const snippet = _neoSnippet(s).slice(0, 120);
+        const cls = _liveStepCls(s);
+        const el = document.createElement('div');
+        el.className = `neo-live-step ${cls}`;
+        el.style.animationDelay = '0ms';
+        el.innerHTML = `
+          <span class="neo-live-icon">${_neoIcon(s)}</span>
+          <div>
+            <div class="neo-live-type">${_neoTypeName(s)}${s.name ? ' · '+plEsc(s.name) : ''}</div>
+            ${snippet ? `<div class="neo-live-content">${plEsc(snippet)}</div>` : ''}
+          </div>`;
+        liveLog.appendChild(el);
+        liveLog.scrollTop = liveLog.scrollHeight;
+      }
+
+      // Final answer
+      const finish = divSteps.find(s => s.step_type==='agent_finish');
+      const finalOut = finish ? (((finish.input_data||{}).final_output||{}).output||'') : '';
+      if (finalOut) {
+        await new Promise(res => setTimeout(res, 250));
+        const el = document.createElement('div');
+        el.className = 'neo-live-final';
+        el.innerHTML = `<div class="neo-live-final-lbl">◉ Final Answer</div><div class="neo-live-final-txt">${plEsc(finalOut)}</div>`;
+        liveLog.appendChild(el);
+        liveLog.scrollTop = liveLog.scrollHeight;
+      }
+
+      // Semantic drift score pill
+      if (r.semantic_drift != null) {
+        await new Promise(res => setTimeout(res, 200));
+        const drift = r.semantic_drift;
+        const pct = Math.round(drift * 100);
+        const driftClr = pct >= 60 ? '#F87171' : pct >= 30 ? '#FCD34D' : '#34D399';
+        const driftEl = document.createElement('div');
+        driftEl.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 11px;margin-top:6px;border-radius:6px;background:#818CF810;border:1px solid #818CF830;font-size:11px;color:#A5B4FC`;
+        driftEl.innerHTML = `<span style="font-size:14px">⊕</span><div><div style="font-weight:700;color:#C4B5FD">Semantic Drift — <span style="color:${driftClr}">${pct}%</span></div><div style="opacity:.7;margin-top:1px">${plEsc(r.drift_summary||'Trajectory comparison computed')}</div></div>`;
+        liveLog.appendChild(driftEl);
+        liveLog.scrollTop = liveLog.scrollHeight;
+        // Also update toolbar pill
+        const dp = document.getElementById('neoDriftPill');
+        if (dp) { dp.textContent = `⊕ drift ${pct}%`; dp.style.display='inline-flex'; dp.style.color=driftClr; }
+      }
+    }
+
+    // Mettre à jour le graphe avec la branche
+    renderNeoGraph(_neoSteps, divSteps);
+    if (patchEl) patchEl.style.display = 'flex';
+    await loadRuns();
+
+  } catch(e) {
+    toast('Divergence failed: '+e.message, 'err');
+    if (patchEl) patchEl.style.display = 'flex';
+  }
 }
 
 /* ── JSON syntax highlight ────────────────────────────────────── */

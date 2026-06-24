@@ -520,7 +520,7 @@ def run_divergence(
         print(f"    Patched  : {patch_prompt[:100]}")
 
     if patch_step is not None:
-        print(f"  Tool patch at      : tool call #{q['patch_at_call_position']} (step {patch_step})")
+        print(f"  Tool patch at      : {q['patch_tool']} call #{q['patch_call_position']} (step {patch_step})")
 
     print(f"\n  Original path  : {' → '.join(orig_calls) or '(none)'}")
     print(f"  Diverged path  : {' → '.join(div_calls) or '(none)'}")
